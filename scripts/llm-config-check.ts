@@ -166,13 +166,13 @@ async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
 
-  // Parse mode argument (defaults to toolBased)
-  let mode: Mode = 'toolBased';
+  // Parse mode argument - if provided, use only that mode; otherwise test all modes
   const modeArg = args.find((arg) => arg.startsWith('--mode='));
+  let modesToTest: Mode[] = ['toolBased', 'promptBased'];
   if (modeArg) {
     const modeValue = modeArg.split('=')[1];
     if (modeValue === 'toolBased' || modeValue === 'promptBased') {
-      mode = modeValue as Mode;
+      modesToTest = [modeValue as Mode];
     } else {
       console.error(
         `Invalid mode: ${String(modeValue)}. Must be 'toolBased' or 'promptBased'`
@@ -230,20 +230,24 @@ async function main() {
   const results: CaseResult[] = [];
 
   for (const testCase of casesToRun) {
-    // Run all models concurrently for this test case
-    const modelPromises = MODELS.map((model) =>
-      checkModelForTestCase(
-        {
-          testCase,
-          model,
-          mode,
-          verbose,
-        },
-        runConfigCheck
-      )
-    );
+    // Run all models with all modes concurrently for this test case
+    const allPromises: Promise<CaseResult>[] = [];
+    for (const mode of modesToTest) {
+      const modelPromises = MODELS.map((model) =>
+        checkModelForTestCase(
+          {
+            testCase,
+            model,
+            mode,
+            verbose,
+          },
+          runConfigCheck
+        )
+      );
+      allPromises.push(...modelPromises);
+    }
 
-    const caseResults = await Promise.all(modelPromises);
+    const caseResults = await Promise.all(allPromises);
 
     // Check if any tests failed
     for (const caseResult of caseResults) {

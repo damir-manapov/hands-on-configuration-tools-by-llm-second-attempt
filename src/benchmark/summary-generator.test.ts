@@ -109,7 +109,7 @@ describe('generateSummary', () => {
     ]);
   });
 
-  it('should include all case results for each model', () => {
+  it('should group results by model and mode', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
@@ -131,7 +131,10 @@ describe('generateSummary', () => {
 
     const summary = generateSummary(results);
 
-    expect(summary.models[0]?.caseResults).toEqual(results);
+    // Should have separate entries for each model-mode combination
+    expect(summary.models).toHaveLength(2);
+    expect(summary.models[0]?.caseResults).toEqual([results[0]]);
+    expect(summary.models[1]?.caseResults).toEqual([results[1]]);
   });
 
   it('should handle empty results array', () => {

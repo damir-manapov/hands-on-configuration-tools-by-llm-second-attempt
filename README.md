@@ -140,6 +140,7 @@ The script includes predefined model lists for easy selection:
 
 - **`all`** - All available models (default)
 - **`top`** - Top tier models (best quality)
+- **`topScored`** - Top performing models based on benchmark results (18 models)
 - **`fast`** - Fast models (good balance of speed and quality)
 - **`reasoning`** - Reasoning models (specialized for complex reasoning)
 - **`openai`** - All OpenAI models
@@ -190,12 +191,25 @@ With `--verbose` flag, it also shows:
 2. **Concurrent Testing**: Runs all models concurrently for each test case to speed up execution
 3. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
 4. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
-5. **LLM Generation**: Each model generates a `ConfigSchema` based on the description, using the Object JSON Schema as a structural reference
+5. **LLM Schema Generation** (Optimized): Each model generates a `ConfigSchema` **once per test case**, which is then reused for all test data items in that test case
    - **Default (`--mode=toolBased`)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
    - **Prompt-based (`--mode=promptBased`)**: Uses direct JSON generation via prompts with retry logic
-6. **Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
-7. **Object Check**: The object is validated against the generated schema using `ConfigChecker`
+   - **Performance**: This optimization reduces LLM API calls significantly. For example, a test case with 5 test data items across 10 models makes 10 API calls instead of 50 (80% reduction)
+6. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
+7. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
 8. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
 9. **Summary**: A comprehensive summary table shows how each model performed
 
 The scripts use the `ConfigChecker` class from `src/config-checker.ts` which supports various validation rules like required fields, type checking, min/max constraints, and custom validators.
+
+### Architecture
+
+The codebase is organized into several key modules:
+
+- **`src/checker/run-config-check.ts`**: Core functions for schema generation and object validation
+  - `generateConfigSchema()`: Generates a schema once per test case (requires LLM call)
+  - `checkObjectAgainstSchema()`: Validates objects against an existing schema (no LLM call)
+  - `runConfigCheck()`: Legacy function that combines both (for backward compatibility)
+- **`src/benchmark/check-test-case.ts`**: Orchestrates test case execution, generating schema once and reusing it for all test data items
+- **`src/llm/generators/`**: Config generator implementations for different modes (tool-based, prompt-based)
+- **`src/core/config-checker.ts`**: Schema validation and object checking logic

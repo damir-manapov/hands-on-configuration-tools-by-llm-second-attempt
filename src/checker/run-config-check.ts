@@ -55,10 +55,9 @@ export async function generateConfigSchema(
     console.log(
       `Reference JSON Schema: ${JSON.stringify(options.objectJsonSchema, null, 2)}`
     );
+    console.log(`Check description: ${options.checkDescription}`);
     console.log('');
   }
-
-  console.log(`Check description: ${options.checkDescription}`);
 
   const mode = options.mode ?? 'toolBased';
   const generator = getConfigGenerator(mode);
@@ -124,9 +123,11 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
     mode: options.mode,
   });
 
-  console.log('Generated config:');
-  console.log(JSON.stringify(schema, null, 2));
-  console.log('');
+  if (options.verbose) {
+    console.log('Generated config:');
+    console.log(JSON.stringify(schema, null, 2));
+    console.log('');
+  }
 
   return checkObjectAgainstSchema({
     schema,

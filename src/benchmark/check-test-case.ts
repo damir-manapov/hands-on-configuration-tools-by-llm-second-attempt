@@ -38,13 +38,17 @@ export async function checkModelForTestCase(
   let caseError: string | undefined;
   const startTime = Date.now();
 
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`Test Case: ${testCase.name} | Model: ${model}`);
-  console.log('='.repeat(60));
+  if (verbose) {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`Test Case: ${testCase.name} | Model: ${model}`);
+    console.log('='.repeat(60));
+  }
 
   try {
     // Generate schema ONCE for this test case (shared by all test data items)
-    console.log('\n--- Generating Schema ---');
+    if (verbose) {
+      console.log('\n--- Generating Schema ---');
+    }
     const schema = await generateSchema({
       checkDescription: testCase.checkDescription,
       objectJsonSchema: testCase.objectJsonSchema,
@@ -53,9 +57,11 @@ export async function checkModelForTestCase(
       model,
     });
 
-    console.log('Generated config:');
-    console.log(JSON.stringify(schema, null, 2));
-    console.log('');
+    if (verbose) {
+      console.log('Generated config:');
+      console.log(JSON.stringify(schema, null, 2));
+      console.log('');
+    }
 
     // Run all test data items against the same schema
     for (let i = 0; i < testCase.testData.length; i++) {
@@ -63,7 +69,9 @@ export async function checkModelForTestCase(
       if (!testItem) {
         continue;
       }
-      console.log(`\n--- Test Data ${i + 1}/${testCase.testData.length} ---`);
+      if (verbose) {
+        console.log(`\n--- Test Data ${i + 1}/${testCase.testData.length} ---`);
+      }
 
       const objectJson = JSON.stringify(testItem.data, null, 2);
 
@@ -78,7 +86,7 @@ export async function checkModelForTestCase(
         console.error(
           `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
         );
-      } else {
+      } else if (verbose) {
         console.log(
           `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
         );

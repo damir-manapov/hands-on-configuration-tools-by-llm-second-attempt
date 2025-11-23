@@ -86,11 +86,11 @@ The script uses the `OpenRouterClient` class from `src/openrouter-client.ts` whi
 
 ## LLM Config Checker
 
-The LLM Config Checker uses an LLM to generate validation schemas based on check descriptions and JSON Schema references.
+The LLM Config Checker uses multiple LLM models to generate validation schemas based on check descriptions and JSON Schema references, then compares their performance.
 
 ### Script
 
-- `scripts/llm-config-check.ts` - Runs multiple test cases, checking objects using LLM-generated schemas
+- `scripts/llm-config-check.ts` - Runs multiple test cases across multiple LLM models, checking objects using LLM-generated schemas, and generates a comparison summary
 
 ### Usage
 
@@ -98,50 +98,67 @@ The LLM Config Checker uses an LLM to generate validation schemas based on check
 # Set your OpenRouter API key
 export OPENROUTER_API_KEY="your-api-key"
 
-# Run all test cases (uses tool calling by default)
+# Run all test cases across all models (uses tool calling by default)
 tsx scripts/llm-config-check.ts
 
-# Run a specific test case by name
+# Run a specific test case by name (across all models)
 tsx scripts/llm-config-check.ts user
 tsx scripts/llm-config-check.ts product
 
-# Run with custom object JSON
+# Run with custom object JSON (adds to all test cases)
 tsx scripts/llm-config-check.ts '{"name":"Jane","age":25,"email":"jane@example.com"}'
 
-# Use prompt-based generation instead of tools
-tsx scripts/llm-config-check.ts --no-tools
-tsx scripts/llm-config-check.ts --prompt
+# Use prompt-based generation instead of tool calling
+tsx scripts/llm-config-check.ts --mode=promptBased
 
-# Verbose mode (shows full LLM conversation)
+# Use tool-based generation (default)
+tsx scripts/llm-config-check.ts --mode=toolBased
+
+# Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose
 tsx scripts/llm-config-check.ts user --verbose
-tsx scripts/llm-config-check.ts --no-tools --verbose
+tsx scripts/llm-config-check.ts --mode=promptBased --verbose
 ```
 
 ### Output
 
-By default, the script shows:
+The script tests multiple LLM models concurrently and generates:
 
-- Check description
-- Object to check
-- Generated config schema
-- Result (PASS/FAIL)
+1. **Per-Model Results**: For each model, shows:
+   - Model name
+   - Score (successful cases / total cases, plus logarithmic score)
+   - Per-case results with pass/fail status
+   - Individual test results
+
+2. **Final Summary Table**: A markdown table comparing all models with:
+   - Model name
+   - Cases passed/total
+   - Score (logarithmic)
+   - Average time
+   - Overall status (PASSED/FAILED/ERROR)
+
+Models are sorted by:
+- Score (higher is better)
+- Status (PASSED > FAILED > ERROR)
+- Average time (lower is better)
 
 With `--verbose` flag, it also shows:
-
 - Reference JSON Schema (if provided)
-- Full LLM conversation (all attempts, messages, responses)
+- Full LLM conversation (all attempts, messages, responses) for each model
 - Validation details during retries
 
 ### How It Works
 
-1. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
-2. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
-3. **LLM Generation**: The LLM generates a `ConfigSchema` based on the description, using the Object JSON Schema as a structural reference
-   - **Default (Tool Calling)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
-   - **Prompt-based (`--no-tools`)**: Uses direct JSON generation via prompts with retry logic
-4. **Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
-5. **Object Check**: The object is validated against the generated schema using `ConfigChecker`
-6. **Multiple Cases**: The script runs all test cases sequentially and shows a summary at the end
+1. **Multiple Models**: Tests against a curated list of high-quality LLM models (OpenAI, Anthropic, Google, Meta, DeepSeek, Qwen, Mistral)
+2. **Concurrent Testing**: Runs all models concurrently for each test case to speed up execution
+3. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
+4. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
+5. **LLM Generation**: Each model generates a `ConfigSchema` based on the description, using the Object JSON Schema as a structural reference
+   - **Default (`--mode=toolBased`)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
+   - **Prompt-based (`--mode=promptBased`)**: Uses direct JSON generation via prompts with retry logic
+6. **Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
+7. **Object Check**: The object is validated against the generated schema using `ConfigChecker`
+8. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
+9. **Summary**: A comprehensive summary table shows how each model performed
 
 The scripts use the `ConfigChecker` class from `src/config-checker.ts` which supports various validation rules like required fields, type checking, min/max constraints, and custom validators.

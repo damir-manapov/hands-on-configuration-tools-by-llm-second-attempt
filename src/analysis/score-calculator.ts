@@ -25,29 +25,69 @@ export interface ModelScore {
 
 export function calculateModelScore(
   model: string,
-  results: CaseResult[]
+  allResults: CaseResult[] // Need all results to calculate case weights
 ): ModelScore {
-  const totalCases = results.length;
-  const successfulCases = results.filter((result) => {
-    if (result.error) {
-      return false; // Cases with errors are not successful
+  // Filter results for this specific model
+  const modelResults = allResults.filter((r) => r.model === model);
+  const totalCases = modelResults.length;
+
+  // First, calculate weights for each case based on how many models passed it
+  const casePassCounts = new Map<string, number>();
+
+  // Count how many models passed each case
+  for (const result of allResults) {
+    const isSuccessful =
+      !result.error && result.testResults.every((r) => r.passed);
+    if (isSuccessful) {
+      casePassCounts.set(
+        result.caseName,
+        (casePassCounts.get(result.caseName) ?? 0) + 1
+      );
     }
-    return result.testResults.every((r) => r.passed); // All tests must pass
-  }).length;
-  const score =
-    successfulCases > 0 ? Math.log(totalCases / successfulCases) : 0;
+  }
+
+  // Calculate total number of models
+  const totalModels = new Set(allResults.map((r) => r.model)).size;
+
+  // Calculate weight for each case: log(totalModels / modelsThatPassed)
+  // Hard cases (few models pass) get higher weights
+  const caseWeights = new Map<string, number>();
+  for (const [caseName, passCount] of casePassCounts.entries()) {
+    if (passCount > 0 && totalModels > 0) {
+      caseWeights.set(caseName, Math.log(totalModels / passCount));
+    } else {
+      // If no models passed, weight is 0 (case is too hard or has issues)
+      caseWeights.set(caseName, 0);
+    }
+  }
+
+  // Calculate score: sum weights of all cases this model passed
+  // Higher score = passed more hard cases
+  let score = 0;
+  let successfulCases = 0;
+
+  for (const result of modelResults) {
+    const isSuccessful =
+      !result.error && result.testResults.every((r) => r.passed);
+    if (isSuccessful) {
+      successfulCases++;
+      const weight = caseWeights.get(result.caseName) ?? 0;
+      score += weight;
+    }
+  }
 
   // Calculate average time
   const averageTime =
-    results.length > 0
-      ? results.reduce((sum, r) => sum + r.duration, 0) / results.length
+    modelResults.length > 0
+      ? modelResults.reduce((sum, r) => sum + r.duration, 0) /
+        modelResults.length
       : 0;
 
   return {
     model,
     totalCases,
     successfulCases,
-    score,
+    score, // Higher is better (positive for hard cases passed)
     averageTime,
   };
 }

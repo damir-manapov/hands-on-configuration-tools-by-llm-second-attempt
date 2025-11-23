@@ -23,6 +23,8 @@ describe('generateSummary', () => {
 
     const summary = generateSummary(results);
 
+    // Test1: only model1 passed (1 of 2) -> weight = log(2/1) = log(2) ≈ 0.693
+    // Test2: only model2 passed (1 of 2) -> weight = log(2/1) = log(2) ≈ 0.693
     expect(summary.models).toEqual([
       {
         model: 'model1',
@@ -30,7 +32,7 @@ describe('generateSummary', () => {
           model: 'model1',
           totalCases: 1,
           successfulCases: 1,
-          score: 0,
+          score: Math.log(2 / 1), // log(2) ≈ 0.693
           averageTime: 1000,
         },
         caseResults: [results[0]],
@@ -41,7 +43,7 @@ describe('generateSummary', () => {
           model: 'model2',
           totalCases: 1,
           successfulCases: 1,
-          score: 0,
+          score: Math.log(2 / 1), // log(2) ≈ 0.693
           averageTime: 2000,
         },
         caseResults: [results[1]],
@@ -66,14 +68,14 @@ describe('generateSummary', () => {
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
-        caseName: 'Test3',
+        caseName: 'Test1',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
-        caseName: 'Test4',
+        caseName: 'Test2',
         model: 'model2',
         mode: 'toolBased',
         duration: 2500,
@@ -85,19 +87,23 @@ describe('generateSummary', () => {
 
     const summary = generateSummary(results);
 
+    // Test1: both models passed (2 of 2) -> weight = log(2/2) = 0
+    // Test2: only model1 passed (1 of 2) -> weight = log(2/1) = log(2) ≈ 0.693
+    // model1: passed both -> score = 0 + 0.693 = 0.693
+    // model2: passed Test1 only -> score = 0 + 0 = 0
     expect(summary.models.map((m) => m.score)).toEqual([
       {
         model: 'model1',
         totalCases: 2,
         successfulCases: 2,
-        score: 0,
+        score: Math.log(2 / 1), // log(2) ≈ 0.693 (Test2 weight)
         averageTime: 1500, // (1000 + 2000) / 2
       },
       {
         model: 'model2',
         totalCases: 2,
         successfulCases: 1,
-        score: Math.log(2 / 1),
+        score: 0, // Test1 weight = log(2/2) = 0
         averageTime: 2000, // (1500 + 2500) / 2
       },
     ]);
@@ -136,7 +142,7 @@ describe('generateSummary', () => {
     expect(summary.models).toEqual([]);
   });
 
-  it('should preserve model order from models array', () => {
+  it('should sort models by score, status, and average time', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
@@ -146,14 +152,14 @@ describe('generateSummary', () => {
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
-        caseName: 'Test2',
+        caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
-        caseName: 'Test3',
+        caseName: 'Test1',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
@@ -163,11 +169,12 @@ describe('generateSummary', () => {
 
     const summary = generateSummary(results);
 
-    // Models should be in the order they first appear in results
+    // All models passed Test1 (3 of 3) -> weight = log(3/3) = 0
+    // All models have score 0 and PASSED status, so sorted by avg time (ascending)
     expect(summary.models.map((m) => m.model)).toEqual([
-      'model3',
-      'model1',
-      'model2',
+      'model3', // 1000ms - fastest
+      'model2', // 1500ms
+      'model1', // 2000ms - slowest
     ]);
   });
 });

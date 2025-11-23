@@ -1,5 +1,6 @@
 import type { CaseResult } from './score-calculator.js';
 import { calculateModelScore, type ModelScore } from './score-calculator.js';
+import { sortModels } from './model-sorter.js';
 
 export interface ModelSummary {
   model: string;
@@ -28,7 +29,8 @@ export function generateSummary(results: CaseResult[]): Summary {
     if (!seenModels.has(result.model)) {
       seenModels.add(result.model);
       const modelResults = resultsByModel.get(result.model)!;
-      const score = calculateModelScore(result.model, modelResults);
+      // Pass all results to calculate case weights
+      const score = calculateModelScore(result.model, results);
       modelSummaries.push({
         model: result.model,
         score,
@@ -37,7 +39,10 @@ export function generateSummary(results: CaseResult[]): Summary {
     }
   }
 
+  // Sort models by score, status, and average time
+  const sortedModels = sortModels(modelSummaries);
+
   return {
-    models: modelSummaries,
+    models: sortedModels,
   };
 }

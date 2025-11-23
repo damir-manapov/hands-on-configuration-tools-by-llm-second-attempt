@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 
-import { runConfigCheck } from '../src/runner/llm-config-check-runner.js';
+import { runConfigCheck } from '../src/runner/run-config-check.js';
 import { generateSummary } from '../src/analysis/summary-generator.js';
 import type { CaseResult, Mode } from '../src/analysis/score-calculator.js';
 import {
   checkModelForTestCase,
   type TestCase,
-} from '../src/runner/model-checker.js';
+} from '../src/runner/check-test-case.js';
 
 // Models to test against
 const MODELS = [

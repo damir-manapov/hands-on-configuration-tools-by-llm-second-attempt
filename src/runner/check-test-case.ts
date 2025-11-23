@@ -3,7 +3,7 @@ import type {
   TestResult,
   Mode,
 } from '../analysis/score-calculator.js';
-import type { CheckOptions } from './llm-config-check-runner.js';
+import type { CheckOptions } from './run-config-check.js';
 
 export interface TestData {
   data: Record<string, unknown>;

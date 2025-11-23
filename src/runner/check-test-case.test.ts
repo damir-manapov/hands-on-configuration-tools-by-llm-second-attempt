@@ -6,8 +6,8 @@ import {
   beforeEach,
   type MockedFunction,
 } from 'vitest';
-import { checkModelForTestCase, type TestCase } from './model-checker.js';
-import type { CheckOptions } from './llm-config-check-runner.js';
+import { checkModelForTestCase, type TestCase } from './check-test-case.js';
+import type { CheckOptions } from './run-config-check.js';
 
 describe('checkModelForTestCase', () => {
   let mockRunConfigCheck: MockedFunction<

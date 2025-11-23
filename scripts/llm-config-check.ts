@@ -313,7 +313,7 @@ async function main() {
 
   // Build table data with average speed
   const tableData: string[][] = [
-    ['Model', 'Cases', 'Score', 'Avg Time', 'Status'],
+    ['Model', 'Mode', 'Cases', 'Score', 'Avg Time', 'Status'],
   ];
 
   // Helper function to format time
@@ -344,9 +344,15 @@ async function main() {
     const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
     const scoreStr = modelSummary.score.score.toFixed(3);
     const avgTimeStr = formatTime(modelSummary.score.averageTime);
+    // Get mode from first case result (all should have the same mode)
+    const modeStr =
+      modelSummary.caseResults.length > 0
+        ? modelSummary.caseResults[0]!.mode
+        : 'N/A';
 
     tableData.push([
       modelSummary.model,
+      modeStr,
       casesStr,
       scoreStr,
       avgTimeStr,
@@ -355,7 +361,9 @@ async function main() {
   }
 
   // Print markdown table
-  console.log(markdownTable(tableData, { align: ['l', 'r', 'r', 'r', 'r'] }));
+  console.log(
+    markdownTable(tableData, { align: ['l', 'l', 'r', 'r', 'r', 'r'] })
+  );
   console.log('');
   console.log('='.repeat(60));
   console.log(`Overall: ${allPassed ? 'ALL PASSED' : 'SOME FAILED'}`);

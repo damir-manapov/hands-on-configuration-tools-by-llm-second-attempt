@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 
+import { markdownTable } from 'markdown-table';
 import { runConfigCheck } from '../src/runner/run-config-check.js';
 import { generateSummary } from '../src/analysis/summary-generator.js';
 import type { CaseResult, Mode } from '../src/analysis/score-calculator.js';
@@ -257,7 +258,33 @@ async function main() {
     }
   }
 
+  // Print final summary table
   console.log(`\n${'='.repeat(60)}`);
+  console.log('FINAL SUMMARY TABLE');
+  console.log('='.repeat(60));
+  console.log('');
+
+  // Build table data
+  const tableData: string[][] = [['Model', 'Cases', 'Score', 'Status']];
+
+  for (const modelSummary of summary.models) {
+    const hasErrors = modelSummary.caseResults.some((r) => r.error);
+    const allPassed =
+      !hasErrors &&
+      modelSummary.caseResults.every((r) =>
+        r.testResults.every((tr) => tr.passed)
+      );
+    const status = hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
+    const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
+    const scoreStr = modelSummary.score.score.toFixed(3);
+
+    tableData.push([modelSummary.model, casesStr, scoreStr, status]);
+  }
+
+  // Print markdown table
+  console.log(markdownTable(tableData, { align: ['l', 'r', 'r', 'r'] }));
+  console.log('');
+  console.log('='.repeat(60));
   console.log(`Overall: ${allPassed ? 'ALL PASSED' : 'SOME FAILED'}`);
   console.log('='.repeat(60));
 

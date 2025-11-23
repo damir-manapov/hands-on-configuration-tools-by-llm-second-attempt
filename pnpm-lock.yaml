@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      markdown-table:
+        specifier: ^3.0.4
+        version: 3.0.4
       openai:
         specifier: ^6.9.1
         version: 6.9.1(zod@4.1.12)
@@ -1235,6 +1238,12 @@ packages:
         integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==,
       }
 
+  markdown-table@3.0.4:
+    resolution:
+      {
+        integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==,
+      }
+
   merge2@1.4.1:
     resolution:
       {
@@ -2352,6 +2361,8 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  markdown-table@3.0.4: {}
 
   merge2@1.4.1: {}
 

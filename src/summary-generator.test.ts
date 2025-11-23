@@ -9,17 +9,13 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model2',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
 
@@ -55,32 +51,26 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test3',
         model: 'model2',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test4',
         model: 'model2',
         mode: 'toolBased',
         testResults: [
-          { testIndex: 1, passed: false, expected: true, actual: false },
+          { passed: false, expected: true, passedAsExpected: false },
         ],
       },
     ];
@@ -109,16 +99,14 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'promptBased',
         testResults: [
-          { testIndex: 1, passed: false, expected: true, actual: false },
+          { passed: false, expected: true, passedAsExpected: false },
         ],
       },
     ];
@@ -142,35 +130,29 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model3',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test3',
         model: 'model2',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
 
     const summary = generateSummary(results);
 
+    // Models should be in the order they first appear in results
     expect(summary.models.map((m) => m.model)).toEqual([
+      'model3',
       'model1',
       'model2',
-      'model3',
     ]);
   });
 });
-

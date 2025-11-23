@@ -2,7 +2,8 @@
 
 import { runConfigCheck } from '../src/llm-config-check-runner.js';
 import { generateSummary } from '../src/summary-generator.js';
-import type { CaseResult } from '../src/score-calculator.js';
+import type { CaseResult, Mode } from '../src/score-calculator.js';
+import { checkModelForTestCase, type TestCase } from '../src/model-checker.js';
 
 // Models to test against
 const MODELS = [
@@ -11,22 +12,6 @@ const MODELS = [
   'anthropic/claude-3.5-sonnet',
   'google/gemini-flash-1.5',
 ];
-
-interface TestData {
-  data: unknown;
-  expectedResult: boolean;
-}
-
-interface TestCase {
-  name: string;
-  checkDescription: string;
-  objectJsonSchema: {
-    type: 'object';
-    required: string[];
-    properties: Record<string, { type: string; items?: { type: string } }>;
-  };
-  testData: TestData[];
-}
 
 const TEST_CASES: TestCase[] = [
   {
@@ -134,9 +119,25 @@ const TEST_CASES: TestCase[] = [
 async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
-  const useTools = !(args.includes('--no-tools') || args.includes('--prompt'));
+
+  // Parse mode argument (defaults to toolBased)
+  let mode: Mode = 'toolBased';
+  const modeArg = args.find((arg) => arg.startsWith('--mode='));
+  if (modeArg) {
+    const modeValue = modeArg.split('=')[1];
+    if (modeValue === 'toolBased' || modeValue === 'promptBased') {
+      mode = modeValue as Mode;
+    } else {
+      console.error(
+        `Invalid mode: ${String(modeValue)}. Must be 'toolBased' or 'promptBased'`
+      );
+      process.exit(1);
+    }
+  }
+
   const caseName = args.find(
-    (arg) => !arg.startsWith('-') && !arg.includes('{')
+    (arg) =>
+      !arg.startsWith('-') && !arg.includes('{') && !arg.startsWith('--mode=')
   );
   const customObjectJson = args.find((arg) => arg.startsWith('{'));
 
@@ -154,106 +155,57 @@ async function main() {
     }
   }
 
+  // If customObjectJson provided, add it as a new test data item to all test cases
+  if (customObjectJson) {
+    try {
+      const parsedData = JSON.parse(customObjectJson) as Record<
+        string,
+        unknown
+      >;
+      casesToRun = casesToRun.map((testCase) => ({
+        ...testCase,
+        testData: [
+          ...testCase.testData,
+          {
+            data: parsedData,
+            expectedResult: true,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error(
+        `Failed to parse custom object JSON: ${error instanceof Error ? error.message : String(error)}`
+      );
+      process.exit(1);
+    }
+  }
+
   let allPassed = true;
   const results: CaseResult[] = [];
 
   for (const testCase of casesToRun) {
     for (const model of MODELS) {
-      const caseResults: {
-        testIndex: number;
-        passed: boolean;
-        expected: boolean;
-        actual: boolean;
-      }[] = [];
-      const mode: 'toolBased' | 'promptBased' = useTools
-        ? 'toolBased'
-        : 'promptBased';
-      let caseError: string | undefined;
-      console.log(`\n${'='.repeat(60)}`);
-      console.log(`Test Case: ${testCase.name} | Model: ${model}`);
-      console.log('='.repeat(60));
+      const caseResult = await checkModelForTestCase(
+        {
+          testCase,
+          model,
+          mode,
+          verbose,
+        },
+        runConfigCheck
+      );
 
-      try {
-        // If custom object JSON provided, use it for a single check
-        if (customObjectJson) {
-          const result = await runConfigCheck({
-            checkDescription: testCase.checkDescription,
-            objectJsonSchema: testCase.objectJsonSchema,
-            objectJson: customObjectJson,
-            verbose,
-            useTools,
-            model,
-          });
-
-          if (!result) {
-            allPassed = false;
-          }
-          caseResults.push({
-            testIndex: 0,
-            passed: result,
-            expected: true,
-            actual: result,
-          });
-        } else {
-          // Run all test data items for this test case
-          for (let i = 0; i < testCase.testData.length; i++) {
-            const testItem = testCase.testData[i];
-            if (!testItem) {
-              continue;
-            }
-            console.log(
-              `\n--- Test Data ${i + 1}/${testCase.testData.length} ---`
-            );
-
-            const objectJson = JSON.stringify(testItem.data, null, 2);
-
-            const result = await runConfigCheck({
-              checkDescription: testCase.checkDescription,
-              objectJsonSchema: testCase.objectJsonSchema,
-              objectJson,
-              verbose,
-              useTools,
-              model,
-            });
-
-            const passed = result === testItem.expectedResult;
-            if (!passed) {
-              console.error(
-                `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
-              );
-              allPassed = false;
-            } else {
-              console.log(
-                `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
-              );
-            }
-            caseResults.push({
-              testIndex: i + 1,
-              passed,
-              expected: testItem.expectedResult,
-              actual: result,
-            });
-          }
-        }
-      } catch (error) {
-        // Unexpected error that prevented tests from running
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        caseError = errorMessage;
-        console.error(
-          `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}":`,
-          errorMessage
-        );
+      // Check if any tests failed
+      if (caseResult.error) {
         allPassed = false;
+      } else {
+        const hasFailedTests = caseResult.testResults.some((r) => !r.passed);
+        if (hasFailedTests) {
+          allPassed = false;
+        }
       }
 
-      results.push({
-        caseName: testCase.name,
-        model,
-        mode,
-        ...(caseError ? { error: caseError } : {}),
-        testResults: caseResults,
-      });
+      results.push(caseResult);
     }
   }
 
@@ -280,23 +232,24 @@ async function main() {
         console.log(`  Error: ${caseResult.error}`);
       } else {
         const casePassed = caseResult.testResults.every((r) => r.passed);
-        const passedCount = caseResult.testResults.filter((r) => r.passed)
-          .length;
+        const passedCount = caseResult.testResults.filter(
+          (r) => r.passed
+        ).length;
         const totalCount = caseResult.testResults.length;
 
         console.log(
           `\n${caseResult.caseName} [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
         );
 
-        for (const testResult of caseResult.testResults) {
+        caseResult.testResults.forEach((testResult, index) => {
           const status = testResult.passed ? '✓' : '✗';
           const expectedStr = testResult.expected ? 'PASS' : 'FAIL';
-          const actualStr = testResult.actual ? 'PASS' : 'FAIL';
+          const actualStr = testResult.passedAsExpected ? 'PASS' : 'FAIL';
           const matchStr = testResult.passed ? 'Match' : 'Mismatch';
           console.log(
-            `  ${status} Test ${testResult.testIndex}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
+            `  ${status} Test ${index + 1}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
           );
-        }
+        });
       }
     }
   }

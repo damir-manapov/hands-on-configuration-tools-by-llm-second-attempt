@@ -1,14 +1,17 @@
+export type Mode = 'toolBased' | 'promptBased';
+
+export interface TestResult {
+  passed: boolean;
+  expected: boolean;
+  passedAsExpected: boolean;
+}
+
 export interface CaseResult {
   caseName: string;
   model: string;
-  mode: 'toolBased' | 'promptBased';
+  mode: Mode;
   error?: string;
-  testResults: {
-    testIndex: number;
-    passed: boolean;
-    expected: boolean;
-    actual: boolean;
-  }[];
+  testResults: TestResult[];
 }
 
 export interface ModelScore {
@@ -39,4 +42,3 @@ export function calculateModelScore(
     score,
   };
 }
-

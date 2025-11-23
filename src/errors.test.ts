@@ -32,7 +32,6 @@ describe('Custom Error Classes', () => {
         attempts: 5,
       });
     });
-
   });
 
   describe('InvalidJsonError', () => {
@@ -136,4 +135,3 @@ describe('Custom Error Classes', () => {
     });
   });
 });
-

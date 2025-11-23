@@ -41,4 +41,3 @@ export function generateSummary(results: CaseResult[]): Summary {
     models: modelSummaries,
   };
 }
-

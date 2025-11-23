@@ -8,17 +8,13 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
 
@@ -39,7 +35,7 @@ describe('calculateModelScore', () => {
         model: 'model1',
         mode: 'toolBased',
         testResults: [
-          { testIndex: 1, passed: false, expected: true, actual: false },
+          { passed: false, expected: true, passedAsExpected: false },
         ],
       },
     ];
@@ -60,16 +56,14 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
         testResults: [
-          { testIndex: 1, passed: false, expected: true, actual: false },
+          { passed: false, expected: true, passedAsExpected: false },
         ],
       },
     ];
@@ -97,9 +91,7 @@ describe('calculateModelScore', () => {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
-        testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-        ],
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
 
@@ -120,8 +112,8 @@ describe('calculateModelScore', () => {
         model: 'model1',
         mode: 'toolBased',
         testResults: [
-          { testIndex: 1, passed: true, expected: true, actual: true },
-          { testIndex: 2, passed: false, expected: true, actual: false },
+          { passed: true, expected: true, passedAsExpected: true },
+          { passed: false, expected: true, passedAsExpected: false },
         ],
       },
     ];
@@ -149,4 +141,3 @@ describe('calculateModelScore', () => {
     });
   });
 });
-

@@ -3,6 +3,7 @@ import { ConfigChecker } from './config-checker.js';
 import { generateConfigFromLLM } from './llm-config-generator.js';
 import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
 import { MissingApiKeyError, InvalidJsonError } from './errors.js';
+import type { Mode } from './score-calculator.js';
 
 export interface CheckOptions {
   checkDescription: string;
@@ -11,7 +12,7 @@ export interface CheckOptions {
   apiKey?: string;
   model?: string;
   verbose?: boolean;
-  useTools?: boolean;
+  mode?: Mode;
 }
 
 export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
@@ -50,21 +51,22 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   console.log(`Object to check: ${JSON.stringify(objectToCheck, null, 2)}`);
   console.log('');
 
-  const schema = options.useTools
-    ? await generateConfigFromLLMWithTools(
-        client,
-        options.checkDescription,
-        options.objectJsonSchema,
-        3,
-        options.verbose
-      )
-    : await generateConfigFromLLM(
-        client,
-        options.checkDescription,
-        options.objectJsonSchema,
-        3,
-        options.verbose
-      );
+  const schema =
+    options.mode === 'toolBased'
+      ? await generateConfigFromLLMWithTools(
+          client,
+          options.checkDescription,
+          options.objectJsonSchema,
+          3,
+          options.verbose
+        )
+      : await generateConfigFromLLM(
+          client,
+          options.checkDescription,
+          options.objectJsonSchema,
+          3,
+          options.verbose
+        );
 
   console.log('Generated config:');
   console.log(JSON.stringify(schema, null, 2));

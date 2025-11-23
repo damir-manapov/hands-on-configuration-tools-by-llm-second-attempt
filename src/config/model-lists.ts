@@ -218,7 +218,7 @@ export const MODEL_LISTS: Record<string, string[]> = {
     'mistralai/mistral-nemo',
     'mistralai/mistral-medium-3',
     'mistralai/mistral-large',
-    'mistralai/mistral-7b-instruct',
+    // 'mistralai/mistral-7b-instruct',
     'mistralai/mistral-small-24b-instruct-2501',
     'mistralai/mistral-small-3.2-24b-instruct',
     'mistralai/mistral-7b-instruct-v0.1',

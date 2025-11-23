@@ -24,6 +24,7 @@ export interface DebugInfo {
   model: string;
   mode: Mode;
   caseName: string;
+  checkDescription: string;
   referenceConfig: ConfigSchema;
   generatedConfig?: ConfigSchema;
   testData: TestData[];
@@ -132,19 +133,20 @@ export async function checkModelForTestCase(
     duration,
   };
 
-  // Include debug info if there are failures or errors
+  // Include debug info only if there are test failures (tests ran but didn't pass)
+  // Exclude errors (tests that couldn't run) - only include actual failures
   const hasFailures =
-    caseError !== undefined || caseResults.some((r) => !r.passed);
+    caseError === undefined && caseResults.some((r) => !r.passed);
   if (hasFailures) {
     result.debugInfo = {
       model,
       mode,
       caseName: testCase.name,
+      checkDescription: testCase.checkDescription,
       referenceConfig: testCase.referenceConfig,
       generatedConfig: generatedSchema,
       testData: testCase.testData,
       testResults: caseResults,
-      ...(caseError ? { error: caseError } : {}),
     };
   }
 

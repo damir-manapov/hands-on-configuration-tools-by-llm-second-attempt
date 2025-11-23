@@ -413,6 +413,7 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
   let content = `# Debug Information for Failed Checks\n\n`;
   content += `Generated: ${timestamp}\n\n`;
   content += `Total failures: ${debugInfos.length}\n\n`;
+  content += `*Note: This file only includes test failures (tests that ran but didn't pass), not errors (tests that couldn't run).*\n\n`;
   content += `---\n\n`;
 
   for (let i = 0; i < debugInfos.length; i++) {
@@ -426,35 +427,43 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
     content += `**Mode:** \`${debug.mode}\`  \n`;
     content += `**Case:** \`${debug.caseName}\`  \n\n`;
 
-    if (debug.error) {
-      content += `### Error\n\n\`\`\`\n${debug.error}\n\`\`\`\n\n`;
-    }
+    content += `### Check Description\n\n${debug.checkDescription}\n\n`;
 
     content += `### Reference Config\n\n\`\`\`json\n${JSON.stringify(debug.referenceConfig, null, 2)}\n\`\`\`\n\n`;
 
     if (debug.generatedConfig) {
       content += `### Generated Config\n\n\`\`\`json\n${JSON.stringify(debug.generatedConfig, null, 2)}\n\`\`\`\n\n`;
     } else {
-      content += `### Generated Config\n\n*Not available (error occurred before generation)*\n\n`;
+      content += `### Generated Config\n\n*Not available*\n\n`;
     }
 
     content += `### Test Data and Results\n\n`;
+    // Only include failed tests
+    let failedTestCount = 0;
     for (let j = 0; j < debug.testData.length; j++) {
       const testData = debug.testData[j];
       const testResult = debug.testResults[j];
-      if (!testData) {
+      if (!testData || !testResult) {
         continue;
       }
 
-      const status = testResult?.passed ? '✓' : '✗';
-      const expected = testData.expectedResult ? 'PASS' : 'FAIL';
-      const actual = testResult?.passedAsExpected ? 'PASS' : 'FAIL';
+      // Skip tests that passed
+      if (testResult.passed) {
+        continue;
+      }
 
-      content += `#### Test ${j + 1}: ${status} Expected ${expected}, Got ${actual}\n\n`;
+      failedTestCount++;
+      const expected = testData.expectedResult ? 'PASS' : 'FAIL';
+      const actual = testResult.passedAsExpected ? 'PASS' : 'FAIL';
+
+      content += `#### Failed Test ${failedTestCount} (Original Test ${j + 1}): Expected ${expected}, Got ${actual}\n\n`;
       content += `**Test Data:**\n\n\`\`\`json\n${JSON.stringify(testData.data, null, 2)}\n\`\`\`\n\n`;
       content += `**Expected Result:** ${testData.expectedResult ? 'PASS' : 'FAIL'}  \n`;
-      content += `**Actual Result:** ${testResult?.passedAsExpected ? 'PASS' : 'FAIL'}  \n`;
-      content += `**Match:** ${testResult?.passed ? 'Yes' : 'No'}  \n\n`;
+      content += `**Actual Result:** ${actual}  \n\n`;
+    }
+
+    if (failedTestCount === 0) {
+      content += `*No failed tests found (this shouldn't happen)*\n\n`;
     }
 
     content += `---\n\n`;

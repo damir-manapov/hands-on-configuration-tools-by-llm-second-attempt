@@ -100,4 +100,3 @@ describe('schema-generator-registry', () => {
     });
   });
 });
-

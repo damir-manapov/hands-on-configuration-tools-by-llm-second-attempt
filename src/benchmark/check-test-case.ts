@@ -1,9 +1,5 @@
-import type {
-  CaseResult,
-  TestResult,
-  Mode,
-} from '../analysis/score-calculator.js';
-import type { CheckOptions } from './run-config-check.js';
+import type { CaseResult, TestResult, Mode } from './score-calculator.js';
+import type { CheckOptions } from '../checker/run-config-check.js';
 
 export interface TestData {
   data: Record<string, unknown>;

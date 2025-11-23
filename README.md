@@ -138,11 +138,13 @@ The script tests multiple LLM models concurrently and generates:
    - Overall status (PASSED/FAILED/ERROR)
 
 Models are sorted by:
+
 - Score (higher is better)
 - Status (PASSED > FAILED > ERROR)
 - Average time (lower is better)
 
 With `--verbose` flag, it also shows:
+
 - Reference JSON Schema (if provided)
 - Full LLM conversation (all attempts, messages, responses) for each model
 - Validation details during retries

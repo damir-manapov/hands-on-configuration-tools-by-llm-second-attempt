@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 
 import { markdownTable } from 'markdown-table';
-import { runConfigCheck } from '../src/runner/run-config-check.js';
-import { generateSummary } from '../src/analysis/summary-generator.js';
-import type { CaseResult, Mode } from '../src/analysis/score-calculator.js';
+import { runConfigCheck } from '../src/checker/run-config-check.js';
+import { generateSummary } from '../src/benchmark/summary-generator.js';
+import type { CaseResult, Mode } from '../src/benchmark/score-calculator.js';
 import {
   checkModelForTestCase,
   type TestCase,
-} from '../src/runner/check-test-case.js';
+} from '../src/benchmark/check-test-case.js';
 
 // Models to test against
 // Selected based on: highest quality (speed and price not a concern)

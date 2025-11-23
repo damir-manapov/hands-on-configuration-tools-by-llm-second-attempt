@@ -2,7 +2,7 @@ import { OpenRouterClient } from '../core/openrouter-client.js';
 import { ConfigChecker } from '../core/config-checker.js';
 import { getSchemaGenerator } from '../llm/schema-generator-registry.js';
 import { MissingApiKeyError, InvalidJsonError } from '../core/errors.js';
-import type { Mode } from '../analysis/score-calculator.js';
+import type { Mode } from '../benchmark/score-calculator.js';
 
 export interface CheckOptions {
   checkDescription: string;

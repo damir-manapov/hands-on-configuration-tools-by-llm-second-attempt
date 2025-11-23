@@ -2,7 +2,7 @@ import type { OpenRouterClient } from '../core/openrouter-client.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 import { generateConfigFromLLM } from './llm-config-generator.js';
 import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
-import type { Mode } from '../analysis/score-calculator.js';
+import type { Mode } from '../benchmark/score-calculator.js';
 
 /**
  * Schema generator function signature.
@@ -20,7 +20,7 @@ export type SchemaGenerator = (
  * Registry of schema generators for different modes.
  *
  * To add a new mode:
- * 1. Extend the `Mode` type in `src/analysis/score-calculator.ts`:
+ * 1. Extend the `Mode` type in `src/benchmark/score-calculator.ts`:
  *    ```typescript
  *    export type Mode = 'toolBased' | 'promptBased' | 'yourNewMode';
  *    ```
@@ -106,4 +106,3 @@ export function hasSchemaGenerator(mode: Mode): boolean {
 export function getRegisteredModes(): Mode[] {
   return registry.getRegisteredModes();
 }
-

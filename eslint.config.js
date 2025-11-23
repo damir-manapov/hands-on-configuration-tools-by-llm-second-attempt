@@ -2,17 +2,21 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
-export default tseslint.config(
+export default [
   js.configs.recommended,
   {
     ignores: ['dist/**', 'node_modules/**'],
   },
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+  })),
+  ...tseslint.configs.stylisticTypeChecked.map((config) => ({
+    ...config,
+    files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+  })),
   {
     files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
-    extends: [
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
-    ],
     languageOptions: {
       parserOptions: {
         project: ['./tsconfig.json', './tsconfig.test.json'],
@@ -31,9 +35,12 @@ export default tseslint.config(
       ],
     },
   },
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: ['*.config.ts', '*.config.js', 'eslint.config.js'],
+  })),
   {
     files: ['*.config.ts', '*.config.js', 'eslint.config.js'],
-    extends: [...tseslint.configs.recommended],
     languageOptions: {
       parserOptions: {
         project: null,
@@ -43,5 +50,5 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
     },
   },
-  prettierConfig
-);
+  prettierConfig,
+];

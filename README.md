@@ -48,3 +48,38 @@ MIT
 - `pnpm lint:fix` - Run ESLint and fix issues
 - `pnpm format` - Format code with Prettier
 - `pnpm format:check` - Check formatting without fixing
+
+## OpenRouter Script
+
+This project includes an OpenRouter client script that can be run directly with `tsx`.
+
+### Setup
+
+1. Get your OpenRouter API key from [OpenRouter](https://openrouter.ai/)
+2. Set the environment variable:
+   ```bash
+   export OPENROUTER_API_KEY="your-api-key-here"
+   ```
+3. Optionally set a default model:
+   ```bash
+   export OPENROUTER_MODEL="openai/gpt-4"
+   ```
+
+### Usage
+
+Run the script directly with `tsx`:
+
+```bash
+tsx scripts/openrouter.ts "Your prompt here"
+```
+
+Example:
+
+```bash
+tsx scripts/openrouter.ts "Explain what TypeScript is in one sentence"
+```
+
+The script uses the `OpenRouterClient` class from `src/openrouter-client.ts` which provides:
+
+- `complete(prompt, model?)` - Simple completion with a single prompt
+- `chat(messages, model?)` - Chat completion with multiple messages

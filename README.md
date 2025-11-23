@@ -86,31 +86,53 @@ The script uses the `OpenRouterClient` class from `src/openrouter-client.ts` whi
 
 ## LLM Config Checker
 
-This project includes scripts that use an LLM to generate configuration schemas and validate objects against them.
+The LLM Config Checker uses an LLM to generate validation schemas based on check descriptions and JSON Schema references.
 
-### Available Scripts
+### Script
 
-- `llm-config-check-user.ts` - Validates user objects with predefined schema
-- `llm-config-check-product.ts` - Validates product objects with predefined schema
+- `scripts/llm-config-check.ts` - Runs multiple test cases, checking objects using LLM-generated schemas
 
 ### Usage
 
-Run scripts with default test data or provide custom object JSON:
-
 ```bash
-# Run with default test data
-tsx scripts/llm-config-check-user.ts
-tsx scripts/llm-config-check-product.ts
+# Set your OpenRouter API key
+export OPENROUTER_API_KEY="your-api-key"
 
-# Run with custom object
-tsx scripts/llm-config-check-user.ts '{"name":"Alice","age":28,"email":"alice@example.com"}'
-tsx scripts/llm-config-check-product.ts '{"id":"456","name":"Phone","price":599.99}'
+# Run all test cases
+tsx scripts/llm-config-check.ts
+
+# Run a specific test case by name
+tsx scripts/llm-config-check.ts user
+tsx scripts/llm-config-check.ts product
+
+# Run with custom object JSON
+tsx scripts/llm-config-check.ts '{"name":"Jane","age":25,"email":"jane@example.com"}'
+
+# Verbose mode (shows full LLM conversation)
+tsx scripts/llm-config-check.ts --verbose
+tsx scripts/llm-config-check.ts user --verbose
 ```
 
-The scripts will:
+### Output
 
-1. Call the LLM to generate a config schema based on the predefined description
-2. Validate the provided object against the generated schema
-3. Output whether the object passes or fails
+By default, the script shows:
+- Check description
+- Object to check
+- Generated config schema
+- Result (PASS/FAIL)
+
+With `--verbose` flag, it also shows:
+- Reference JSON Schema (if provided)
+- Full LLM conversation (all attempts, messages, responses)
+- Validation details during retries
+
+### How It Works
+
+1. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
+2. **JSON Schema Reference**: Optional JSON Schema that describes the object structure, types, and required fields (without constraints)
+3. **LLM Generation**: The LLM generates a `ConfigSchema` based on the description, using the JSON Schema as a structural reference
+4. **Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
+5. **Object Check**: The object is validated against the generated schema using `ConfigChecker`
+6. **Multiple Cases**: The script runs all test cases sequentially and shows a summary at the end
 
 The scripts use the `ConfigChecker` class from `src/config-checker.ts` which supports various validation rules like required fields, type checking, min/max constraints, and custom validators.

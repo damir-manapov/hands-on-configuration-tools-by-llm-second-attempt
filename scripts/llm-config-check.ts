@@ -266,34 +266,55 @@ async function main() {
     }
   }
 
-  // Print detailed summary
+  // Print detailed summary grouped by model
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');
   console.log('='.repeat(60));
 
-  for (const caseResult of results) {
-    if (caseResult.error) {
-      console.log(
-        `\n${caseResult.caseName} [${caseResult.model}] [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
-      );
-      console.log(`  Error: ${caseResult.error}`);
-    } else {
-      const casePassed = caseResult.testResults.every((r) => r.passed);
-      const passedCount = caseResult.testResults.filter((r) => r.passed).length;
-      const totalCount = caseResult.testResults.length;
+  // Group results by model
+  const resultsByModel = new Map<string, typeof results>();
+  for (const result of results) {
+    if (!resultsByModel.has(result.model)) {
+      resultsByModel.set(result.model, []);
+    }
+    resultsByModel.get(result.model)!.push(result);
+  }
 
-      console.log(
-        `\n${caseResult.caseName} [${caseResult.model}] [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
-      );
+  // Print summary for each model
+  for (const model of MODELS) {
+    const modelResults = resultsByModel.get(model);
+    if (!modelResults || modelResults.length === 0) {
+      continue;
+    }
 
-      for (const testResult of caseResult.testResults) {
-        const status = testResult.passed ? '✓' : '✗';
-        const expectedStr = testResult.expected ? 'PASS' : 'FAIL';
-        const actualStr = testResult.actual ? 'PASS' : 'FAIL';
-        const matchStr = testResult.passed ? 'Match' : 'Mismatch';
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`Model: ${model}`);
+    console.log('='.repeat(60));
+
+    for (const caseResult of modelResults) {
+      if (caseResult.error) {
         console.log(
-          `  ${status} Test ${testResult.testIndex}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
+          `\n${caseResult.caseName} [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
         );
+        console.log(`  Error: ${caseResult.error}`);
+      } else {
+        const casePassed = caseResult.testResults.every((r) => r.passed);
+        const passedCount = caseResult.testResults.filter((r) => r.passed).length;
+        const totalCount = caseResult.testResults.length;
+
+        console.log(
+          `\n${caseResult.caseName} [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
+        );
+
+        for (const testResult of caseResult.testResults) {
+          const status = testResult.passed ? '✓' : '✗';
+          const expectedStr = testResult.expected ? 'PASS' : 'FAIL';
+          const actualStr = testResult.actual ? 'PASS' : 'FAIL';
+          const matchStr = testResult.passed ? 'Match' : 'Mismatch';
+          console.log(
+            `  ${status} Test ${testResult.testIndex}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
+          );
+        }
       }
     }
   }

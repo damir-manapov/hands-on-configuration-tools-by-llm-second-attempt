@@ -1,4 +1,10 @@
-import type { CaseResult, TestResult, Mode, TestCase } from './types.js';
+import type {
+  CaseResult,
+  TestResult,
+  Mode,
+  TestCase,
+  TestData,
+} from './types.js';
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,
@@ -14,14 +20,26 @@ export interface CheckModelOptions {
   verbose: boolean;
 }
 
+export interface DebugInfo {
+  model: string;
+  mode: Mode;
+  caseName: string;
+  referenceConfig: ConfigSchema;
+  generatedConfig?: ConfigSchema;
+  testData: TestData[];
+  testResults: TestResult[];
+  error?: string;
+}
+
 export async function checkModelForTestCase(
   options: CheckModelOptions,
   generateSchema: (options: GenerateSchemaOptions) => Promise<ConfigSchema>,
   checkObject: (options: CheckObjectOptions) => boolean
-): Promise<CaseResult> {
+): Promise<CaseResult & { debugInfo?: DebugInfo }> {
   const { testCase, model, mode, verbose } = options;
   const caseResults: TestResult[] = [];
   let caseError: string | undefined;
+  let generatedSchema: ConfigSchema | undefined;
   const startTime = Date.now();
 
   if (verbose) {
@@ -42,6 +60,7 @@ export async function checkModelForTestCase(
       mode,
       model,
     });
+    generatedSchema = schema;
 
     if (verbose) {
       console.log('Generated config:');
@@ -104,7 +123,7 @@ export async function checkModelForTestCase(
   const endTime = Date.now();
   const duration = endTime - startTime;
 
-  return {
+  const result: CaseResult & { debugInfo?: DebugInfo } = {
     caseName: testCase.name,
     model,
     mode,
@@ -112,6 +131,24 @@ export async function checkModelForTestCase(
     testResults: caseResults,
     duration,
   };
+
+  // Include debug info if there are failures or errors
+  const hasFailures =
+    caseError !== undefined || caseResults.some((r) => !r.passed);
+  if (hasFailures) {
+    result.debugInfo = {
+      model,
+      mode,
+      caseName: testCase.name,
+      referenceConfig: testCase.referenceConfig,
+      generatedConfig: generatedSchema,
+      testData: testCase.testData,
+      testResults: caseResults,
+      ...(caseError ? { error: caseError } : {}),
+    };
+  }
+
+  return result;
 }
 
 /**

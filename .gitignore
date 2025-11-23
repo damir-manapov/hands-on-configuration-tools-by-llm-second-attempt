@@ -11,4 +11,5 @@ coverage/
 *.swp
 *.swo
 *~
+debug-failures.md
 

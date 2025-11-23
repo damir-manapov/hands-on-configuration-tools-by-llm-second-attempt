@@ -178,6 +178,15 @@ The script tests multiple LLM models concurrently and generates:
    - Average time
    - Overall status (PASSED/FAILED/ERROR)
 
+3. **Debug File** (`debug-failures.md`): When tests fail, a debug file is automatically generated (gitignored) containing:
+   - Model, mode, and case name for each failure
+   - Reference config (expected)
+   - Generated config (actual)
+   - Test data and results for each test item
+   - Error messages (if any)
+
+   This file helps debug why specific checks didn't pass by comparing expected vs actual configurations.
+
 Models are sorted by:
 
 - Score (higher is better)
@@ -193,17 +202,19 @@ With `--verbose` flag, it also shows:
 ### How It Works
 
 1. **Multiple Models**: Tests against a curated list of high-quality LLM models (OpenAI, Anthropic, Google, Meta, DeepSeek, Qwen, Mistral)
-2. **Concurrent Testing**: Runs all models concurrently for each test case to speed up execution
-3. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
-4. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
-5. **LLM Schema Generation** (Optimized): Each model generates a `ConfigSchema` **once per test case**, which is then reused for all test data items in that test case
+2. **Concurrent Testing**: Runs all test cases, models, and modes concurrently to maximize parallelism and speed up execution
+3. **Timeout Protection**: Each model/test case combination has a 1-minute timeout to prevent hanging on slow or unresponsive models
+4. **Progress Tracking**: Shows real-time progress as tests complete
+5. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
+6. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
+7. **LLM Schema Generation** (Optimized): Each model generates a `ConfigSchema` **once per test case**, which is then reused for all test data items in that test case
    - **Default (`--mode=toolBased`)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
    - **Prompt-based (`--mode=promptBased`)**: Uses direct JSON generation via prompts with retry logic
    - **Performance**: This optimization reduces LLM API calls significantly. For example, a test case with 5 test data items across 10 models makes 10 API calls instead of 50 (80% reduction)
-6. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
-7. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
-8. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
-9. **Summary**: A comprehensive summary table shows how each model performed
+8. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
+9. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
+10. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
+11. **Summary**: A comprehensive summary table shows how each model performed
 
 The scripts use the `ConfigChecker` class from `src/config-checker.ts` which supports various validation rules like required fields, type checking, min/max constraints, and custom validators.
 

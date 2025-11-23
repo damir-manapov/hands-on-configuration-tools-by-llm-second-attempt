@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { markdownTable } from 'markdown-table';
+import { writeFileSync } from 'fs';
 import {
   generateConfigSchema,
   checkObjectAgainstSchema,
@@ -8,7 +9,10 @@ import {
 import { generateSummary } from '../src/benchmark/summary-generator.js';
 import type { ScoringMethod } from '../src/benchmark/types.js';
 import type { CaseResult, Mode } from '../src/benchmark/types.js';
-import { checkModelForTestCase } from '../src/benchmark/check-test-case.js';
+import {
+  checkModelForTestCase,
+  type DebugInfo,
+} from '../src/benchmark/check-test-case.js';
 import {
   MODEL_LISTS,
   getModels,
@@ -166,7 +170,8 @@ async function main() {
       promise,
       new Promise<T>((_, reject) =>
         setTimeout(
-          () => reject(new Error(`${errorMessage} (timeout after ${timeoutMs}ms)`)),
+          () =>
+            reject(new Error(`${errorMessage} (timeout after ${timeoutMs}ms)`)),
           timeoutMs
         )
       ),
@@ -239,7 +244,8 @@ async function main() {
     process.stderr.write('\n'); // New line after progress
   }
 
-  // Check if any tests failed
+  // Check if any tests failed and collect debug info
+  const debugInfos: DebugInfo[] = [];
   for (const caseResult of allResults) {
     if (caseResult.error) {
       allPassed = false;
@@ -250,7 +256,24 @@ async function main() {
       }
     }
 
-    results.push(caseResult);
+    // Collect debug info for failed cases
+    const resultWithDebug = caseResult as CaseResult & {
+      debugInfo?: DebugInfo;
+    };
+    if (resultWithDebug.debugInfo) {
+      debugInfos.push(resultWithDebug.debugInfo);
+    }
+
+    // Remove debugInfo from result before pushing (to maintain CaseResult type)
+    const { debugInfo: _, ...cleanResult } = caseResult as CaseResult & {
+      debugInfo?: DebugInfo;
+    };
+    results.push(cleanResult);
+  }
+
+  // Write debug file if there are failures
+  if (debugInfos.length > 0) {
+    writeDebugFile(debugInfos);
   }
 
   // Generate and print summary
@@ -376,8 +399,68 @@ async function main() {
   console.log('='.repeat(60));
 
   if (!allPassed) {
+    if (debugInfos.length > 0) {
+      console.log(
+        `\nDebug information written to: debug-failures.md (${debugInfos.length} failure(s))`
+      );
+    }
     process.exit(1);
   }
+}
+
+function writeDebugFile(debugInfos: DebugInfo[]): void {
+  const timestamp = new Date().toISOString();
+  let content = `# Debug Information for Failed Checks\n\n`;
+  content += `Generated: ${timestamp}\n\n`;
+  content += `Total failures: ${debugInfos.length}\n\n`;
+  content += `---\n\n`;
+
+  for (let i = 0; i < debugInfos.length; i++) {
+    const debug = debugInfos[i];
+    if (!debug) {
+      continue;
+    }
+
+    content += `## Failure ${i + 1}: ${debug.caseName}\n\n`;
+    content += `**Model:** \`${debug.model}\`  \n`;
+    content += `**Mode:** \`${debug.mode}\`  \n`;
+    content += `**Case:** \`${debug.caseName}\`  \n\n`;
+
+    if (debug.error) {
+      content += `### Error\n\n\`\`\`\n${debug.error}\n\`\`\`\n\n`;
+    }
+
+    content += `### Reference Config\n\n\`\`\`json\n${JSON.stringify(debug.referenceConfig, null, 2)}\n\`\`\`\n\n`;
+
+    if (debug.generatedConfig) {
+      content += `### Generated Config\n\n\`\`\`json\n${JSON.stringify(debug.generatedConfig, null, 2)}\n\`\`\`\n\n`;
+    } else {
+      content += `### Generated Config\n\n*Not available (error occurred before generation)*\n\n`;
+    }
+
+    content += `### Test Data and Results\n\n`;
+    for (let j = 0; j < debug.testData.length; j++) {
+      const testData = debug.testData[j];
+      const testResult = debug.testResults[j];
+      if (!testData) {
+        continue;
+      }
+
+      const status = testResult?.passed ? '✓' : '✗';
+      const expected = testData.expectedResult ? 'PASS' : 'FAIL';
+      const actual = testResult?.passedAsExpected ? 'PASS' : 'FAIL';
+
+      content += `#### Test ${j + 1}: ${status} Expected ${expected}, Got ${actual}\n\n`;
+      content += `**Test Data:**\n\n\`\`\`json\n${JSON.stringify(testData.data, null, 2)}\n\`\`\`\n\n`;
+      content += `**Expected Result:** ${testData.expectedResult ? 'PASS' : 'FAIL'}  \n`;
+      content += `**Actual Result:** ${testResult?.passedAsExpected ? 'PASS' : 'FAIL'}  \n`;
+      content += `**Match:** ${testResult?.passed ? 'Yes' : 'No'}  \n\n`;
+    }
+
+    content += `---\n\n`;
+  }
+
+  writeFileSync('debug-failures.md', content, 'utf-8');
 }
 
 main().catch((error: unknown) => {

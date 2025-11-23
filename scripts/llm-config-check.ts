@@ -409,10 +409,14 @@ async function main() {
       console.log(`  ${index + 1}. ${model}`);
     });
   } else {
-    console.log(`  ${modelsToTest.slice(0, 5).join(', ')}${modelsToTest.length > 5 ? ` ... and ${modelsToTest.length - 5} more` : ''}`);
+    console.log(
+      `  ${modelsToTest.slice(0, 5).join(', ')}${modelsToTest.length > 5 ? ` ... and ${modelsToTest.length - 5} more` : ''}`
+    );
   }
   console.log(`Modes to test: ${modesToTest.join(', ')}`);
-  console.log(`Test cases: ${casesToRun.length} (${casesToRun.map((c) => c.name).join(', ')})`);
+  console.log(
+    `Test cases: ${casesToRun.length} (${casesToRun.map((c) => c.name).join(', ')})`
+  );
   console.log('='.repeat(60) + '\n');
 
   let allPassed = true;

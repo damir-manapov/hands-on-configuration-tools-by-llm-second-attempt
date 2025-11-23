@@ -127,6 +127,7 @@ tsx scripts/llm-config-check.ts --mode=toolBased
 # Combine options
 tsx scripts/llm-config-check.ts --models=top --mode=toolBased user
 tsx scripts/llm-config-check.ts --models=openai,anthropic --verbose
+tsx scripts/llm-config-check.ts --models=topScored --mode=promptBased
 
 # Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose

@@ -2,6 +2,11 @@
 
 import { runConfigCheck } from '../src/llm-config-check-runner.js';
 
+interface TestData {
+  data: unknown;
+  expectedResult: boolean;
+}
+
 interface TestCase {
   name: string;
   checkDescription: string;
@@ -10,7 +15,7 @@ interface TestCase {
     required: string[];
     properties: Record<string, { type: string; items?: { type: string } }>;
   };
-  testData: unknown;
+  testData: TestData[];
 }
 
 const TEST_CASES: TestCase[] = [
@@ -41,13 +46,26 @@ const TEST_CASES: TestCase[] = [
         },
       },
     },
-    testData: {
-      name: 'John Doe',
-      age: 30,
-      email: 'john@example.com',
-      active: true,
-      tags: ['developer', 'typescript'],
-    },
+    testData: [
+      {
+        data: {
+          name: 'John Doe',
+          age: 30,
+          email: 'john@example.com',
+          active: true,
+          tags: ['developer', 'typescript'],
+        },
+        expectedResult: true,
+      },
+      {
+        data: {
+          name: 'A',
+          age: 15,
+          email: 'test',
+        },
+        expectedResult: false,
+      },
+    ],
   },
   {
     name: 'Product',
@@ -79,14 +97,27 @@ const TEST_CASES: TestCase[] = [
         },
       },
     },
-    testData: {
-      id: 'prod-123',
-      name: 'Laptop',
-      price: 999.99,
-      description: 'High-performance laptop for developers',
-      inStock: true,
-      categories: ['electronics', 'computers'],
-    },
+    testData: [
+      {
+        data: {
+          id: 'prod-123',
+          name: 'Laptop',
+          price: 999.99,
+          description: 'High-performance laptop for developers',
+          inStock: true,
+          categories: ['electronics', 'computers'],
+        },
+        expectedResult: true,
+      },
+      {
+        data: {
+          id: 'prod-456',
+          name: 'AB',
+          price: -10,
+        },
+        expectedResult: false,
+      },
+    ],
   },
 ];
 
@@ -115,25 +146,61 @@ async function main() {
     console.log(`Test Case: ${testCase.name}`);
     console.log('='.repeat(60));
 
-    const objectJson = customObjectJson ?? JSON.stringify(testCase.testData, null, 2);
+    // If custom object JSON provided, use it for a single check
+    if (customObjectJson) {
+      try {
+        const result = await runConfigCheck({
+          checkDescription: testCase.checkDescription,
+          jsonSchema: testCase.jsonSchema,
+          objectJson: customObjectJson,
+          verbose,
+        });
 
-    try {
-      const result = await runConfigCheck({
-        checkDescription: testCase.checkDescription,
-        jsonSchema: testCase.jsonSchema,
-        objectJson,
-        verbose,
-      });
-
-      if (!result) {
+        if (!result) {
+          allPassed = false;
+        }
+      } catch (error) {
+        console.error(
+          `Error in test case "${testCase.name}":`,
+          error instanceof Error ? error.message : String(error)
+        );
         allPassed = false;
       }
-    } catch (error) {
-      console.error(
-        `Error in test case "${testCase.name}":`,
-        error instanceof Error ? error.message : String(error)
-      );
-      allPassed = false;
+    } else {
+      // Run all test data items for this test case
+      for (let i = 0; i < testCase.testData.length; i++) {
+        const testItem = testCase.testData[i];
+        console.log(`\n--- Test Data ${i + 1}/${testCase.testData.length} ---`);
+
+        const objectJson = JSON.stringify(testItem.data, null, 2);
+
+        try {
+          const result = await runConfigCheck({
+            checkDescription: testCase.checkDescription,
+            jsonSchema: testCase.jsonSchema,
+            objectJson,
+            verbose,
+          });
+
+          const passed = result === testItem.expectedResult;
+          if (!passed) {
+            console.error(
+              `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
+            );
+            allPassed = false;
+          } else {
+            console.log(
+              `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
+            );
+          }
+        } catch (error) {
+          console.error(
+            `Error in test case "${testCase.name}", test data ${i + 1}:`,
+            error instanceof Error ? error.message : String(error)
+          );
+          allPassed = false;
+        }
+      }
     }
   }
 

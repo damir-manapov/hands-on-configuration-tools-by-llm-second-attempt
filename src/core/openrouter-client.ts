@@ -9,16 +9,20 @@ export interface OpenRouterConfig {
   apiKey: string;
   baseURL?: string;
   defaultModel?: string;
+  timeout?: number; // Timeout in milliseconds (default: 120000 = 2 minutes)
 }
 
 export class OpenRouterClient {
   private client: OpenAI;
   private defaultModel: string;
+  private timeout: number;
 
   constructor(config: OpenRouterConfig) {
+    this.timeout = config.timeout ?? 120_000; // Default 2 minutes
     this.client = new OpenAI({
       apiKey: config.apiKey,
       baseURL: config.baseURL ?? 'https://openrouter.ai/api/v1',
+      timeout: this.timeout,
     });
     this.defaultModel = config.defaultModel ?? 'openai/gpt-3.5-turbo';
   }

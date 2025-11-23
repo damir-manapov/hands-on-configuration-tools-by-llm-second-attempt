@@ -156,26 +156,83 @@ async function main() {
   let allPassed = true;
   const results: CaseResult[] = [];
 
+  // Helper function to add timeout to promises
+  function withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    errorMessage: string
+  ): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`${errorMessage} (timeout after ${timeoutMs}ms)`)),
+          timeoutMs
+        )
+      ),
+    ]);
+  }
+
   for (const testCase of casesToRun) {
+    console.log(
+      `\nRunning test case: ${testCase.name} (${modelsToTest.length} models × ${modesToTest.length} modes = ${modelsToTest.length * modesToTest.length} combinations)...`
+    );
+
     // Run all models with all modes concurrently for this test case
     const allPromises: Promise<CaseResult>[] = [];
+    let completedCount = 0;
+    const totalCombinations = modelsToTest.length * modesToTest.length;
+
     for (const mode of modesToTest) {
       const modelPromises = modelsToTest.map((model) =>
-        checkModelForTestCase(
-          {
-            testCase,
-            model,
-            mode,
-            verbose,
-          },
-          generateConfigSchema,
-          checkObjectAgainstSchema
+        withTimeout(
+          checkModelForTestCase(
+            {
+              testCase,
+              model,
+              mode,
+              verbose,
+            },
+            generateConfigSchema,
+            checkObjectAgainstSchema
+          ),
+          60_000, // 5 minutes timeout per model/test case combination
+          `Timeout for ${model} (${mode}) on ${testCase.name}`
         )
+          .then((result) => {
+            completedCount++;
+            if (!verbose) {
+              process.stderr.write(
+                `\rProgress: ${completedCount}/${totalCombinations} completed...`
+              );
+            }
+            return result;
+          })
+          .catch((error) => {
+            completedCount++;
+            if (!verbose) {
+              process.stderr.write(
+                `\rProgress: ${completedCount}/${totalCombinations} completed...`
+              );
+            }
+            // Return error result instead of throwing
+            return {
+              caseName: testCase.name,
+              model,
+              mode,
+              error: error instanceof Error ? error.message : String(error),
+              testResults: [],
+              duration: 0,
+            };
+          })
       );
       allPromises.push(...modelPromises);
     }
 
     const caseResults = await Promise.all(allPromises);
+    if (!verbose) {
+      process.stderr.write('\n'); // New line after progress
+    }
 
     // Check if any tests failed
     for (const caseResult of caseResults) {

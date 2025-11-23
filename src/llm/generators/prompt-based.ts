@@ -1,8 +1,8 @@
-import { OpenRouterClient } from '../core/openrouter-client.js';
-import { type ConfigSchema } from '../core/config-checker.js';
-import { SchemaGenerationError } from '../core/errors.js';
-import { validateConfigSchema } from './validation/schema.js';
-import { extractJsonFromMarkdown } from './utils/json-extractor.js';
+import { OpenRouterClient } from '../../core/openrouter-client.js';
+import { type ConfigSchema } from '../../core/config-checker.js';
+import { SchemaGenerationError } from '../../core/errors.js';
+import { validateConfigSchema } from '../validation/schema.js';
+import { extractJsonFromMarkdown } from '../utils/json-extractor.js';
 
 export async function generateConfigFromLLM(
   client: OpenRouterClient,

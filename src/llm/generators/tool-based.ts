@@ -1,7 +1,7 @@
-import { OpenRouterClient } from '../core/openrouter-client.js';
-import { type ConfigSchema } from '../core/config-checker.js';
-import { SchemaGenerationError } from '../core/errors.js';
-import { validateConfigSchema } from './validation/schema.js';
+import { OpenRouterClient } from '../../core/openrouter-client.js';
+import { type ConfigSchema } from '../../core/config-checker.js';
+import { SchemaGenerationError } from '../../core/errors.js';
+import { validateConfigSchema } from '../validation/schema.js';
 
 const CONFIG_SCHEMA_TOOLS = [
   {

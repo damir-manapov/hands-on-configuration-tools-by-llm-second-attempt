@@ -1,58 +1,58 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  getSchemaGenerator,
-  registerSchemaGenerator,
-  hasSchemaGenerator,
+  getConfigGenerator,
+  registerConfigGenerator,
+  hasConfigGenerator,
   getRegisteredModes,
-  type SchemaGenerator,
-} from './schema-generator-registry.js';
-import type { OpenRouterClient } from '../core/openrouter-client.js';
-import type { ConfigSchema } from '../core/config-checker.js';
+  type ConfigGenerator,
+} from './registry.js';
+import type { OpenRouterClient } from '../../core/openrouter-client.js';
+import type { ConfigSchema } from '../../core/config-checker.js';
 
-describe('schema-generator-registry', () => {
-  describe('getSchemaGenerator', () => {
+describe('registry', () => {
+  describe('getConfigGenerator', () => {
     it('should return generator for toolBased mode', () => {
-      const generator = getSchemaGenerator('toolBased');
+      const generator = getConfigGenerator('toolBased');
       expect(generator).toBeDefined();
       expect(typeof generator).toBe('function');
     });
 
     it('should return generator for promptBased mode', () => {
-      const generator = getSchemaGenerator('promptBased');
+      const generator = getConfigGenerator('promptBased');
       expect(generator).toBeDefined();
       expect(typeof generator).toBe('function');
     });
 
     it('should return different generators for different modes', () => {
-      const toolGenerator = getSchemaGenerator('toolBased');
-      const promptGenerator = getSchemaGenerator('promptBased');
+      const toolGenerator = getConfigGenerator('toolBased');
+      const promptGenerator = getConfigGenerator('promptBased');
       expect(toolGenerator).not.toBe(promptGenerator);
     });
   });
 
-  describe('registerSchemaGenerator', () => {
+  describe('registerConfigGenerator', () => {
     it('should allow overriding an existing generator', () => {
-      const customGenerator: SchemaGenerator = vi.fn().mockResolvedValue({
+      const customGenerator: ConfigGenerator = vi.fn().mockResolvedValue({
         name: { type: 'required' },
       } as ConfigSchema);
 
       // Override promptBased mode
-      const originalGenerator = getSchemaGenerator('promptBased');
-      registerSchemaGenerator('promptBased', customGenerator);
+      const originalGenerator = getConfigGenerator('promptBased');
+      registerConfigGenerator('promptBased', customGenerator);
 
-      const generator = getSchemaGenerator('promptBased');
+      const generator = getConfigGenerator('promptBased');
       expect(generator).toBe(customGenerator);
       expect(generator).not.toBe(originalGenerator);
 
       // Restore original (for other tests)
-      registerSchemaGenerator('promptBased', originalGenerator);
+      registerConfigGenerator('promptBased', originalGenerator);
     });
   });
 
-  describe('hasSchemaGenerator', () => {
+  describe('hasConfigGenerator', () => {
     it('should return true for registered modes', () => {
-      expect(hasSchemaGenerator('toolBased')).toBe(true);
-      expect(hasSchemaGenerator('promptBased')).toBe(true);
+      expect(hasConfigGenerator('toolBased')).toBe(true);
+      expect(hasConfigGenerator('promptBased')).toBe(true);
     });
   });
 
@@ -69,15 +69,15 @@ describe('schema-generator-registry', () => {
     it('should call generator with correct parameters', async () => {
       const mockClient = {} as OpenRouterClient;
       const mockSchema: ConfigSchema = { name: { type: 'required' } };
-      const mockGenerator: SchemaGenerator = vi
+      const mockGenerator: ConfigGenerator = vi
         .fn()
         .mockResolvedValue(mockSchema);
 
       // Temporarily override promptBased
-      const originalGenerator = getSchemaGenerator('promptBased');
-      registerSchemaGenerator('promptBased', mockGenerator);
+      const originalGenerator = getConfigGenerator('promptBased');
+      registerConfigGenerator('promptBased', mockGenerator);
 
-      const generator = getSchemaGenerator('promptBased');
+      const generator = getConfigGenerator('promptBased');
       const result = await generator(
         mockClient,
         'test description',
@@ -96,7 +96,7 @@ describe('schema-generator-registry', () => {
       expect(result).toEqual(mockSchema);
 
       // Restore original
-      registerSchemaGenerator('promptBased', originalGenerator);
+      registerConfigGenerator('promptBased', originalGenerator);
     });
   });
 });

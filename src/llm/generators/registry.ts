@@ -1,14 +1,14 @@
-import type { OpenRouterClient } from '../core/openrouter-client.js';
-import type { ConfigSchema } from '../core/config-checker.js';
-import { generateConfigFromLLM } from './llm-config-generator.js';
-import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
-import type { Mode } from '../benchmark/score-calculator.js';
+import type { OpenRouterClient } from '../../core/openrouter-client.js';
+import type { ConfigSchema } from '../../core/config-checker.js';
+import { generateConfigFromLLM } from './prompt-based.js';
+import { generateConfigFromLLMWithTools } from './tool-based.js';
+import type { Mode } from '../../benchmark/score-calculator.js';
 
 /**
- * Schema generator function signature.
+ * Config generator function signature.
  * All mode implementations must match this signature.
  */
-export type SchemaGenerator = (
+export type ConfigGenerator = (
   client: OpenRouterClient,
   checkDescription: string,
   objectJsonSchema: unknown,
@@ -17,36 +17,36 @@ export type SchemaGenerator = (
 ) => Promise<ConfigSchema>;
 
 /**
- * Registry of schema generators for different modes.
+ * Registry of config generators for different modes.
  *
  * To add a new mode:
  * 1. Extend the `Mode` type in `src/benchmark/score-calculator.ts`:
  *    ```typescript
  *    export type Mode = 'toolBased' | 'promptBased' | 'yourNewMode';
  *    ```
- * 2. Implement a generator function matching the `SchemaGenerator` signature
- * 3. Register it using `registerSchemaGenerator('yourNewMode', yourGenerator)`
+ * 2. Implement a generator function matching the `ConfigGenerator` signature
+ * 3. Register it using `registerConfigGenerator('yourNewMode', yourGenerator)`
  *    or add it to the default registry initialization below
  */
-class SchemaGeneratorRegistry {
-  private generators = new Map<Mode, SchemaGenerator>();
+class ConfigGeneratorRegistry {
+  private generators = new Map<Mode, ConfigGenerator>();
 
   /**
-   * Register a schema generator for a specific mode.
+   * Register a config generator for a specific mode.
    */
-  register(mode: Mode, generator: SchemaGenerator): void {
+  register(mode: Mode, generator: ConfigGenerator): void {
     this.generators.set(mode, generator);
   }
 
   /**
-   * Get the schema generator for a specific mode.
+   * Get the config generator for a specific mode.
    * @throws Error if mode is not registered
    */
-  get(mode: Mode): SchemaGenerator {
+  get(mode: Mode): ConfigGenerator {
     const generator = this.generators.get(mode);
     if (!generator) {
       throw new Error(
-        `No schema generator registered for mode: ${mode}. Available modes: ${Array.from(this.generators.keys()).join(', ')}`
+        `No config generator registered for mode: ${mode}. Available modes: ${Array.from(this.generators.keys()).join(', ')}`
       );
     }
     return generator;
@@ -68,27 +68,27 @@ class SchemaGeneratorRegistry {
 }
 
 // Create and configure the default registry instance
-const registry = new SchemaGeneratorRegistry();
+const registry = new ConfigGeneratorRegistry();
 
 // Register default modes
 registry.register('toolBased', generateConfigFromLLMWithTools);
 registry.register('promptBased', generateConfigFromLLM);
 
 /**
- * Get the schema generator for a specific mode.
+ * Get the config generator for a specific mode.
  * This is the main entry point for getting generators.
  */
-export function getSchemaGenerator(mode: Mode): SchemaGenerator {
+export function getConfigGenerator(mode: Mode): ConfigGenerator {
   return registry.get(mode);
 }
 
 /**
- * Register a custom schema generator for a mode.
+ * Register a custom config generator for a mode.
  * Useful for testing or adding new modes.
  */
-export function registerSchemaGenerator(
+export function registerConfigGenerator(
   mode: Mode,
-  generator: SchemaGenerator
+  generator: ConfigGenerator
 ): void {
   registry.register(mode, generator);
 }
@@ -96,7 +96,7 @@ export function registerSchemaGenerator(
 /**
  * Check if a mode is registered.
  */
-export function hasSchemaGenerator(mode: Mode): boolean {
+export function hasConfigGenerator(mode: Mode): boolean {
   return registry.has(mode);
 }
 

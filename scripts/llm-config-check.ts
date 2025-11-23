@@ -173,16 +173,19 @@ async function main() {
     ]);
   }
 
+  // Calculate total combinations across all test cases
+  const totalCombinations =
+    casesToRun.length * modelsToTest.length * modesToTest.length;
+  let completedCount = 0;
+
+  console.log(
+    `\nRunning all test cases concurrently: ${casesToRun.length} test cases × ${modelsToTest.length} models × ${modesToTest.length} modes = ${totalCombinations} total combinations...`
+  );
+
+  // Create promises for all test cases, models, and modes
+  const allPromises: Promise<CaseResult>[] = [];
+
   for (const testCase of casesToRun) {
-    console.log(
-      `\nRunning test case: ${testCase.name} (${modelsToTest.length} models × ${modesToTest.length} modes = ${modelsToTest.length * modesToTest.length} combinations)...`
-    );
-
-    // Run all models with all modes concurrently for this test case
-    const allPromises: Promise<CaseResult>[] = [];
-    let completedCount = 0;
-    const totalCombinations = modelsToTest.length * modesToTest.length;
-
     for (const mode of modesToTest) {
       const modelPromises = modelsToTest.map((model) =>
         withTimeout(
@@ -196,7 +199,7 @@ async function main() {
             generateConfigSchema,
             checkObjectAgainstSchema
           ),
-          60_000, // 5 minutes timeout per model/test case combination
+          60_000, // 1 minute timeout per model/test case combination
           `Timeout for ${model} (${mode}) on ${testCase.name}`
         )
           .then((result) => {
@@ -228,25 +231,26 @@ async function main() {
       );
       allPromises.push(...modelPromises);
     }
+  }
 
-    const caseResults = await Promise.all(allPromises);
-    if (!verbose) {
-      process.stderr.write('\n'); // New line after progress
-    }
+  // Wait for all promises to complete
+  const allResults = await Promise.all(allPromises);
+  if (!verbose) {
+    process.stderr.write('\n'); // New line after progress
+  }
 
-    // Check if any tests failed
-    for (const caseResult of caseResults) {
-      if (caseResult.error) {
+  // Check if any tests failed
+  for (const caseResult of allResults) {
+    if (caseResult.error) {
+      allPassed = false;
+    } else {
+      const hasFailedTests = caseResult.testResults.some((r) => !r.passed);
+      if (hasFailedTests) {
         allPassed = false;
-      } else {
-        const hasFailedTests = caseResult.testResults.some((r) => !r.passed);
-        if (hasFailedTests) {
-          allPassed = false;
-        }
       }
-
-      results.push(caseResult);
     }
+
+    results.push(caseResult);
   }
 
   // Generate and print summary

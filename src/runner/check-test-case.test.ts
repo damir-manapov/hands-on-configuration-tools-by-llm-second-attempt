@@ -163,7 +163,7 @@ describe('checkModelForTestCase', () => {
       error: result.error,
       testResults: result.testResults,
     }).toEqual({
-      error: 'Test error',
+      error: '[Model: model1, Mode: toolBased] Test error',
       testResults: [],
     });
   });
@@ -303,6 +303,8 @@ describe('checkModelForTestCase', () => {
       mockRunConfigCheck
     );
 
-    expect(result.error).toEqual('String error');
+    expect(result.error).toEqual(
+      '[Model: model1, Mode: toolBased] String error'
+    );
   });
 });

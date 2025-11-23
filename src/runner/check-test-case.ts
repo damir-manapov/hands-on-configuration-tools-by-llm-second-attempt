@@ -80,9 +80,9 @@ export async function checkModelForTestCase(
   } catch (error) {
     // Unexpected error that prevented tests from running
     const errorMessage = error instanceof Error ? error.message : String(error);
-    caseError = errorMessage;
+    caseError = `[Model: ${model}, Mode: ${mode}] ${errorMessage}`;
     console.error(
-      `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}":`,
+      `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}" (Model: ${model}, Mode: ${mode}):`,
       errorMessage
     );
   }

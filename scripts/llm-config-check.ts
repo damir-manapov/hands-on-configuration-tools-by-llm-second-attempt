@@ -230,8 +230,9 @@ async function main() {
   const results: CaseResult[] = [];
 
   for (const testCase of casesToRun) {
-    for (const model of MODELS) {
-      const caseResult = await checkModelForTestCase(
+    // Run all models concurrently for this test case
+    const modelPromises = MODELS.map((model) =>
+      checkModelForTestCase(
         {
           testCase,
           model,
@@ -239,9 +240,13 @@ async function main() {
           verbose,
         },
         runConfigCheck
-      );
+      )
+    );
 
-      // Check if any tests failed
+    const caseResults = await Promise.all(modelPromises);
+
+    // Check if any tests failed
+    for (const caseResult of caseResults) {
       if (caseResult.error) {
         allPassed = false;
       } else {

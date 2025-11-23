@@ -1,6 +1,8 @@
 #!/usr/bin/env tsx
 
 import { runConfigCheck } from '../src/llm-config-check-runner.js';
+import { generateSummary } from '../src/summary-generator.js';
+import type { CaseResult } from '../src/score-calculator.js';
 
 // Models to test against
 const MODELS = [
@@ -153,18 +155,7 @@ async function main() {
   }
 
   let allPassed = true;
-  const results: {
-    caseName: string;
-    model: string;
-    mode: 'toolBased' | 'promptBased';
-    error?: string;
-    testResults: {
-      testIndex: number;
-      passed: boolean;
-      expected: boolean;
-      actual: boolean;
-    }[];
-  }[] = [];
+  const results: CaseResult[] = [];
 
   for (const testCase of casesToRun) {
     for (const model of MODELS) {
@@ -266,32 +257,22 @@ async function main() {
     }
   }
 
-  // Print detailed summary grouped by model
+  // Generate and print summary
+  const summary = generateSummary(results, MODELS);
+
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');
   console.log('='.repeat(60));
 
-  // Group results by model
-  const resultsByModel = new Map<string, typeof results>();
-  for (const result of results) {
-    if (!resultsByModel.has(result.model)) {
-      resultsByModel.set(result.model, []);
-    }
-    resultsByModel.get(result.model)!.push(result);
-  }
-
-  // Print summary for each model
-  for (const model of MODELS) {
-    const modelResults = resultsByModel.get(model);
-    if (!modelResults || modelResults.length === 0) {
-      continue;
-    }
-
+  for (const modelSummary of summary.models) {
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`Model: ${model}`);
+    console.log(`Model: ${modelSummary.model}`);
+    console.log(
+      `Score: ${modelSummary.score.successfulCases}/${modelSummary.score.totalCases} (Log: ${modelSummary.score.score.toFixed(3)})`
+    );
     console.log('='.repeat(60));
 
-    for (const caseResult of modelResults) {
+    for (const caseResult of modelSummary.caseResults) {
       if (caseResult.error) {
         console.log(
           `\n${caseResult.caseName} [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
@@ -299,7 +280,8 @@ async function main() {
         console.log(`  Error: ${caseResult.error}`);
       } else {
         const casePassed = caseResult.testResults.every((r) => r.passed);
-        const passedCount = caseResult.testResults.filter((r) => r.passed).length;
+        const passedCount = caseResult.testResults.filter((r) => r.passed)
+          .length;
         const totalCount = caseResult.testResults.length;
 
         console.log(

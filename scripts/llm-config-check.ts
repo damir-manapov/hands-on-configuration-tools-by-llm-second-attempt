@@ -71,6 +71,43 @@ const MODEL_LISTS: Record<string, string[]> = {
     'mistralai/mistral-small',
   ],
 
+  // All Mistral models from OpenRouter
+  mistralAll: [
+    // Medium models
+    'mistralai/mistral-medium-3.1',
+    'mistralai/mistral-medium-3',
+    // Code models
+    'mistralai/codestral-2508',
+    'mistralai/codestral-2501',
+    'mistralai/devstral-medium',
+    'mistralai/devstral-small-1.1',
+    'mistralai/devstral-small-2505',
+    // Small models
+    'mistralai/mistral-small-3.2-24b',
+    'mistralai/mistral-small-3.1-24b',
+    'mistralai/mistral-small-3',
+    'mistralai/mistral-small',
+    // Reasoning models
+    'mistralai/magistral-medium-2506',
+    'mistralai/magistral-small-2506',
+    // Ministral models
+    'mistralai/ministral-8b',
+    'mistralai/ministral-3b',
+    // Large models
+    'mistralai/mistral-large-2411',
+    'mistralai/mistral-large-2407',
+    'mistralai/mistral-large',
+    // Multimodal models
+    'mistralai/pixtral-large-2411',
+    'mistralai/pixtral-12b',
+    // Other models
+    'mistralai/mistral-nemo',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/mixtral-8x7b-instruct',
+    'mistralai/saba',
+    'mistralai/mistral-tiny',
+  ],
+
   // Top tier models (best quality)
   top: [
     'openai/gpt-5.1',
@@ -150,18 +187,16 @@ const MODEL_LISTS: Record<string, string[]> = {
     'mistralai/mistral-small',
     'mistralai/mistral-large',
     'openai/gpt-4o',
-    'openai/gpt-4-turbo',
-    'openai/o1',
+    // 'openai/o1',
     'anthropic/claude-sonnet-4.5',
     'anthropic/claude-haiku-4.5',
     'anthropic/claude-3.5-sonnet',
     'anthropic/claude-3-opus',
     'qwen/qwen3-coder',
-    'qwen/qwen3-max',
-    'qwen/qwen3-30b-a3b',
+    // 'qwen/qwen3-max',
     'deepseek/deepseek-chat-v3.1',
     'deepseek/deepseek-chat-v3',
-    'google/gemini-2.5-pro',
+    // 'google/gemini-2.5-pro',
   ],
 };
 

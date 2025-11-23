@@ -1,6 +1,6 @@
 import { OpenRouterClient } from '../../core/openrouter-client.js';
 import { type ConfigSchema } from '../../core/config-checker.js';
-import { SchemaGenerationError } from '../../core/errors.js';
+import { SchemaGenerationError, getErrorMessage } from '../../core/errors.js';
 import { validateConfigSchema } from '../validation/schema.js';
 import { extractJsonFromMarkdown } from '../utils/json-extractor.js';
 
@@ -108,8 +108,7 @@ ConfigSchema:
         continue;
       }
     } catch (error) {
-      const jsonError = error instanceof Error ? error.message : String(error);
-      lastError = `Failed to parse as JSON: ${jsonError}`;
+      lastError = `Failed to parse as JSON: ${getErrorMessage(error)}`;
       if (verbose) {
         console.log(`\n✗ JSON parsing failed: ${lastError}`);
       }

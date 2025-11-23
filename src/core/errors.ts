@@ -2,6 +2,15 @@
  * Custom error classes for LLM config generation
  */
 
+/**
+ * Extracts error message from an unknown error value.
+ * @param error - The error value (Error instance, string, or other)
+ * @returns The error message as a string
+ */
+export function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export class SchemaGenerationError extends Error {
   constructor(
     message: string,
@@ -87,5 +96,17 @@ export class UnsupportedToolCallError extends Error {
     super(message);
     this.name = 'UnsupportedToolCallError';
     Object.setPrototypeOf(this, UnsupportedToolCallError.prototype);
+  }
+}
+
+export class InvalidModelError extends Error {
+  constructor(
+    message: string,
+    public readonly modelId: string,
+    public readonly statusCode?: number
+  ) {
+    super(message);
+    this.name = 'InvalidModelError';
+    Object.setPrototypeOf(this, InvalidModelError.prototype);
   }
 }

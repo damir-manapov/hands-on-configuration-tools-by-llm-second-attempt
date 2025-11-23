@@ -1,7 +1,11 @@
 import { OpenRouterClient } from '../core/openrouter-client.js';
 import { ConfigChecker } from '../core/config-checker.js';
 import { getConfigGenerator } from '../llm/generators/registry.js';
-import { MissingApiKeyError, InvalidJsonError } from '../core/errors.js';
+import {
+  MissingApiKeyError,
+  InvalidJsonError,
+  getErrorMessage,
+} from '../core/errors.js';
 import type { Mode } from '../benchmark/score-calculator.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 
@@ -87,10 +91,7 @@ export function checkObjectAgainstSchema(options: CheckObjectOptions): boolean {
   try {
     objectToCheck = JSON.parse(options.objectJson);
   } catch (error) {
-    throw new InvalidJsonError(
-      `Invalid JSON object: ${error instanceof Error ? error.message : String(error)}`,
-      error
-    );
+    throw new InvalidJsonError(`Invalid JSON object: ${getErrorMessage(error)}`, error);
   }
 
   if (options.verbose) {

@@ -4,6 +4,7 @@ import type {
   CheckObjectOptions,
 } from '../checker/run-config-check.js';
 import type { ConfigSchema } from '../core/config-checker.js';
+import { InvalidModelError, getErrorMessage } from '../core/errors.js';
 
 export interface TestData {
   data: Record<string, unknown>;
@@ -84,7 +85,7 @@ export async function checkModelForTestCase(
       const passed = result === testItem.expectedResult;
       if (!passed) {
         console.error(
-          `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
+          `\n✗ Mismatch [Case: ${testCase.name}, Model: ${model}, Mode: ${mode}]: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
         );
       } else if (verbose) {
         console.log(
@@ -99,12 +100,20 @@ export async function checkModelForTestCase(
     }
   } catch (error) {
     // Unexpected error that prevented tests from running
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    caseError = `[Model: ${model}, Mode: ${mode}] ${errorMessage}`;
-    console.error(
-      `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}" (Model: ${model}, Mode: ${mode}):`,
-      errorMessage
-    );
+    if (error instanceof InvalidModelError) {
+      caseError = `[Model: ${error.modelId}, Mode: ${mode}] Invalid model ID: ${error.modelId}${error.statusCode ? ` (HTTP ${error.statusCode})` : ''}`;
+      console.error(
+        `\n✗ ERROR: Invalid model ID for "${testCase.name}" (Model: ${error.modelId}, Mode: ${mode}):`,
+        `Model "${error.modelId}" is not a valid model ID${error.statusCode ? ` (HTTP ${error.statusCode})` : ''}`
+      );
+    } else {
+      const errorMessage = getErrorMessage(error);
+      caseError = `[Model: ${model}, Mode: ${mode}] ${errorMessage}`;
+      console.error(
+        `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}" (Model: ${model}, Mode: ${mode}):`,
+        errorMessage
+      );
+    }
   }
 
   const endTime = Date.now();

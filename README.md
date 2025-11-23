@@ -128,6 +128,7 @@ tsx scripts/llm-config-check.ts --mode=toolBased
 tsx scripts/llm-config-check.ts --models=top --mode=toolBased user
 tsx scripts/llm-config-check.ts --models=openai,anthropic --verbose
 tsx scripts/llm-config-check.ts --models=topScored --mode=promptBased
+tsx scripts/llm-config-check.ts --models=mistralAll --mode=promptBased
 
 # Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose
@@ -149,7 +150,8 @@ The script includes predefined model lists for easy selection:
 - **`google`** - All Google models
 - **`opensource`** - Open source models (Meta, DeepSeek)
 - **`qwen`** - All Qwen models
-- **`mistral`** - All Mistral models
+- **`mistral`** - Selected Mistral models (5 models)
+- **`mistralAll`** - All Mistral models from OpenRouter (28 models) - includes embeddings, code models, reasoning models, and multimodal models
 
 You can combine multiple lists and individual models using comma-separated values:
 

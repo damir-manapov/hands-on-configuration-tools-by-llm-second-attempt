@@ -8,6 +8,7 @@ import {
   UnregisteredModeError,
   InvalidResponseError,
   UnsupportedToolCallError,
+  InvalidModelError,
 } from './errors.js';
 
 describe('Custom Error Classes', () => {
@@ -181,6 +182,7 @@ describe('Custom Error Classes', () => {
       const invalidResponseError = new InvalidResponseError('test');
       const unsupportedToolCallError = new UnsupportedToolCallError('test');
 
+      const invalidModelError = new InvalidModelError('test', 'model-id');
       const errors = [
         schemaError,
         jsonError,
@@ -190,6 +192,7 @@ describe('Custom Error Classes', () => {
         unregisteredModeError,
         invalidResponseError,
         unsupportedToolCallError,
+        invalidModelError,
       ];
 
       errors.forEach((error) => {
@@ -205,7 +208,35 @@ describe('Custom Error Classes', () => {
         'UnregisteredModeError',
         'InvalidResponseError',
         'UnsupportedToolCallError',
+        'InvalidModelError',
       ]);
+    });
+  });
+
+  describe('InvalidModelError', () => {
+    it('should create error with model ID', () => {
+      const error = new InvalidModelError(
+        'Invalid model ID: test-model',
+        'test-model'
+      );
+      expect(error.message).toBe('Invalid model ID: test-model');
+      expect(error.modelId).toBe('test-model');
+      expect(error.statusCode).toBeUndefined();
+      expect(error.name).toBe('InvalidModelError');
+      expect(error).toBeInstanceOf(Error);
+    });
+
+    it('should create error with model ID and status code', () => {
+      const error = new InvalidModelError(
+        'Invalid model ID: test-model',
+        'test-model',
+        400
+      );
+      expect(error.message).toBe('Invalid model ID: test-model');
+      expect(error.modelId).toBe('test-model');
+      expect(error.statusCode).toBe(400);
+      expect(error.name).toBe('InvalidModelError');
+      expect(error).toBeInstanceOf(Error);
     });
   });
 });

@@ -1,7 +1,10 @@
 #!/usr/bin/env tsx
 
 import { markdownTable } from 'markdown-table';
-import { runConfigCheck } from '../src/checker/run-config-check.js';
+import {
+  generateConfigSchema,
+  checkObjectAgainstSchema,
+} from '../src/checker/run-config-check.js';
 import { generateSummary } from '../src/benchmark/summary-generator.js';
 import type { CaseResult, Mode } from '../src/benchmark/score-calculator.js';
 import {
@@ -143,45 +146,24 @@ const MODEL_LISTS: Record<string, string[]> = {
 
   // Top scored models
   topScored: [
-    // OpenAI
-    'openai/gpt-5.1',
-    'openai/gpt-5.1-instant',
-    'openai/gpt-5.1-thinking',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/mistral-small',
+    'mistralai/mistral-large',
     'openai/gpt-4o',
     'openai/gpt-4-turbo',
-    'openai/o1-preview',
     'openai/o1',
-    // Anthropic
     'anthropic/claude-sonnet-4.5',
     'anthropic/claude-haiku-4.5',
     'anthropic/claude-3-opus',
     'anthropic/claude-3.5-sonnet',
-    'anthropic/claude-3.5-opus',
-    // Google
-    'google/gemini-3.0-pro',
-    'google/gemini-3.0-flash',
-    'google/gemini-2.5-pro',
-    'google/gemini-1.5-pro',
-    'google/gemini-2.0-flash-exp',
-    // Meta
-    'meta-llama/llama-3.1-405b-instruct',
-    // DeepSeek
     'deepseek/deepseek-chat-v3',
     'deepseek/deepseek-chat-v3.1',
-    'deepseek/deepseek-chat-v3.2-exp',
-    // Qwen
     'qwen/qwen3-max',
-    'qwen/qwen3-235b-a22b',
     'qwen/qwen3-coder',
-    'qwen/qwen3-32b-instruct',
+    'qwen/qwen-2.5-72b',
     'qwen/qwen3-30b-a3b',
-    'qwen/qwen-2.5-72b-instruct',
-    // Mistral
-    'mistralai/mistral-large',
-    'mistralai/mistral-large-2',
-    'mistralai/mixtral-8x22b-instruct',
-    'mistralai/mixtral-8x7b-instruct',
-    'mistralai/mistral-small',
+    'meta-llama/llama-3.1',
+    'google/gemini-2.5-pro',
   ],
 };
 
@@ -434,7 +416,8 @@ async function main() {
             mode,
             verbose,
           },
-          runConfigCheck
+          generateConfigSchema,
+          checkObjectAgainstSchema
         )
       );
       allPromises.push(...modelPromises);

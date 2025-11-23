@@ -1,10 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { runConfigCheck, type CheckOptions } from './run-config-check.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import {
+  runConfigCheck,
+  checkObjectAgainstSchema,
+  type CheckOptions,
+} from './run-config-check.js';
 import { MissingApiKeyError, InvalidJsonError } from '../core/errors.js';
+import {
+  registerConfigGenerator,
+  getConfigGenerator,
+} from '../llm/generators/registry.js';
+import type { ConfigSchema } from '../core/config-checker.js';
 
 describe('runConfigCheck', () => {
   const mockApiKey = 'test-api-key';
   const originalEnv = process.env;
+  const mockSchema: ConfigSchema = { name: { type: 'required' } };
 
   beforeEach(() => {
     process.env = { ...originalEnv };
@@ -40,15 +50,45 @@ describe('runConfigCheck', () => {
   });
 
   it('should throw InvalidJsonError for invalid JSON', async () => {
-    const options = createMockOptions({ objectJson: 'invalid json' });
+    // Mock the generator to return a schema quickly
+    const originalGenerator = getConfigGenerator('toolBased');
+    const mockGenerator = vi.fn().mockResolvedValue(mockSchema);
+    registerConfigGenerator('toolBased', mockGenerator);
 
-    await expect(runConfigCheck(options)).rejects.toThrow(InvalidJsonError);
-    await expect(runConfigCheck(options)).rejects.toThrow(
-      'Invalid JSON object'
-    );
+    try {
+      const options = createMockOptions({ objectJson: 'invalid json' });
+
+      await expect(runConfigCheck(options)).rejects.toThrow(InvalidJsonError);
+      await expect(runConfigCheck(options)).rejects.toThrow(
+        'Invalid JSON object'
+      );
+    } finally {
+      // Restore original generator
+      registerConfigGenerator('toolBased', originalGenerator);
+    }
   });
 
   // Note: Integration tests for runConfigCheck are covered in
   // src/benchmark/check-test-case.test.ts which tests the full flow
   // including schema generation, config checking, and error handling.
+});
+
+describe('checkObjectAgainstSchema', () => {
+  it('should throw InvalidJsonError for invalid JSON', () => {
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+
+    expect(() =>
+      checkObjectAgainstSchema({
+        schema: mockSchema,
+        objectJson: 'invalid json',
+      })
+    ).toThrow(InvalidJsonError);
+
+    expect(() =>
+      checkObjectAgainstSchema({
+        schema: mockSchema,
+        objectJson: 'invalid json',
+      })
+    ).toThrow('Invalid JSON object');
+  });
 });

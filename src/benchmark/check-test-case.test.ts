@@ -7,15 +7,22 @@ import {
   type MockedFunction,
 } from 'vitest';
 import { checkModelForTestCase, type TestCase } from './check-test-case.js';
-import type { CheckOptions } from '../checker/run-config-check.js';
+import type {
+  GenerateSchemaOptions,
+  CheckObjectOptions,
+} from '../checker/run-config-check.js';
+import type { ConfigSchema } from '../core/config-checker.js';
 
 describe('checkModelForTestCase', () => {
-  let mockRunConfigCheck: MockedFunction<
-    (options: CheckOptions) => Promise<boolean>
+  let mockGenerateSchema: MockedFunction<
+    (options: GenerateSchemaOptions) => Promise<ConfigSchema>
   >;
+  let mockCheckObject: MockedFunction<(options: CheckObjectOptions) => boolean>;
 
   beforeEach(() => {
-    mockRunConfigCheck = vi.fn<(options: CheckOptions) => Promise<boolean>>();
+    mockGenerateSchema =
+      vi.fn<(options: GenerateSchemaOptions) => Promise<ConfigSchema>>();
+    mockCheckObject = vi.fn<(options: CheckObjectOptions) => boolean>();
   });
 
   const createTestCase = (testData: TestCase['testData']): TestCase => ({
@@ -31,13 +38,15 @@ describe('checkModelForTestCase', () => {
     testData,
   });
 
-  it('should run all test data items and collect results', async () => {
+  it('should generate schema once and check all test data items', async () => {
     const testCase = createTestCase([
       { data: { name: 'John' }, expectedResult: true },
       { data: { name: 'Jane' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -46,10 +55,33 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
-    expect(mockRunConfigCheck).toHaveBeenCalledTimes(2);
+    // Schema should be generated once
+    expect(mockGenerateSchema).toHaveBeenCalledTimes(1);
+    expect(mockGenerateSchema).toHaveBeenCalledWith({
+      checkDescription: 'Test description',
+      objectJsonSchema: testCase.objectJsonSchema,
+      verbose: false,
+      mode: 'toolBased',
+      model: 'model1',
+    });
+
+    // Each test data item should be checked against the schema
+    expect(mockCheckObject).toHaveBeenCalledTimes(2);
+    expect(mockCheckObject).toHaveBeenNthCalledWith(1, {
+      schema: mockSchema,
+      objectJson: JSON.stringify({ name: 'John' }, null, 2),
+      verbose: false,
+    });
+    expect(mockCheckObject).toHaveBeenNthCalledWith(2, {
+      schema: mockSchema,
+      objectJson: JSON.stringify({ name: 'Jane' }, null, 2),
+      verbose: false,
+    });
+
     expect(result.testResults).toHaveLength(2);
   });
 
@@ -58,7 +90,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -67,7 +101,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.testResults[0]).toEqual({
@@ -82,7 +117,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(false);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(false);
 
     const result = await checkModelForTestCase(
       {
@@ -91,7 +128,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.testResults[0]).toEqual({
@@ -106,7 +144,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -115,7 +155,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.mode).toEqual('toolBased');
@@ -126,7 +167,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -135,19 +178,20 @@ describe('checkModelForTestCase', () => {
         mode: 'promptBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.mode).toEqual('promptBased');
   });
 
-  it('should include error in result when runConfigCheck throws', async () => {
+  it('should include error in result when generateSchema throws', async () => {
     const testCase = createTestCase([
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
     const error = new Error('Test error');
-    mockRunConfigCheck.mockRejectedValue(error);
+    mockGenerateSchema.mockRejectedValue(error);
 
     const result = await checkModelForTestCase(
       {
@@ -156,7 +200,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect({
@@ -166,10 +211,14 @@ describe('checkModelForTestCase', () => {
       error: '[Model: model1, Mode: toolBased] Test error',
       testResults: [],
     });
+    expect(mockCheckObject).not.toHaveBeenCalled();
   });
 
   it('should handle empty test data array', async () => {
     const testCase = createTestCase([]);
+
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
 
     const result = await checkModelForTestCase(
       {
@@ -178,10 +227,14 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
-    expect(mockRunConfigCheck).not.toHaveBeenCalled();
+    // Schema should still be generated (even if no test data)
+    expect(mockGenerateSchema).toHaveBeenCalledTimes(1);
+    // But no objects should be checked
+    expect(mockCheckObject).not.toHaveBeenCalled();
     expect(result.testResults).toEqual([]);
   });
 
@@ -193,7 +246,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'Jane' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -202,10 +257,14 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
-    expect(mockRunConfigCheck).toHaveBeenCalledTimes(2);
+    // Schema generated once
+    expect(mockGenerateSchema).toHaveBeenCalledTimes(1);
+    // Only 2 valid test items checked
+    expect(mockCheckObject).toHaveBeenCalledTimes(2);
     expect(result.testResults).toHaveLength(2);
   });
 
@@ -214,7 +273,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
       {
@@ -223,7 +284,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect({
@@ -235,12 +297,14 @@ describe('checkModelForTestCase', () => {
     });
   });
 
-  it('should pass correct options to runConfigCheck', async () => {
+  it('should pass correct options to generateSchema and checkObject', async () => {
     const testCase = createTestCase([
       { data: { name: 'John', age: 30 }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockResolvedValue(true);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValue(true);
 
     await checkModelForTestCase(
       {
@@ -249,16 +313,22 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: true,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
-    expect(mockRunConfigCheck).toHaveBeenCalledWith({
+    expect(mockGenerateSchema).toHaveBeenCalledWith({
       checkDescription: 'Test description',
       objectJsonSchema: testCase.objectJsonSchema,
-      objectJson: JSON.stringify({ name: 'John', age: 30 }, null, 2),
       verbose: true,
       mode: 'toolBased',
       model: 'model1',
+    });
+
+    expect(mockCheckObject).toHaveBeenCalledWith({
+      schema: mockSchema,
+      objectJson: JSON.stringify({ name: 'John', age: 30 }, null, 2),
+      verbose: true,
     });
   });
 
@@ -268,7 +338,9 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'Jane' }, expectedResult: false },
     ]);
 
-    mockRunConfigCheck.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    const mockSchema: ConfigSchema = { name: { type: 'required' } };
+    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockCheckObject.mockReturnValueOnce(true).mockReturnValueOnce(false);
 
     const result = await checkModelForTestCase(
       {
@@ -277,7 +349,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.testResults.map((r) => r.passed)).toEqual([
@@ -291,7 +364,7 @@ describe('checkModelForTestCase', () => {
       { data: { name: 'John' }, expectedResult: true },
     ]);
 
-    mockRunConfigCheck.mockRejectedValue('String error');
+    mockGenerateSchema.mockRejectedValue('String error');
 
     const result = await checkModelForTestCase(
       {
@@ -300,7 +373,8 @@ describe('checkModelForTestCase', () => {
         mode: 'toolBased',
         verbose: false,
       },
-      mockRunConfigCheck
+      mockGenerateSchema,
+      mockCheckObject
     );
 
     expect(result.error).toEqual(

@@ -1,5 +1,9 @@
 import type { CaseResult, TestResult, Mode } from './score-calculator.js';
-import type { CheckOptions } from '../checker/run-config-check.js';
+import type {
+  GenerateSchemaOptions,
+  CheckObjectOptions,
+} from '../checker/run-config-check.js';
+import type { ConfigSchema } from '../core/config-checker.js';
 
 export interface TestData {
   data: Record<string, unknown>;
@@ -26,7 +30,8 @@ export interface CheckModelOptions {
 
 export async function checkModelForTestCase(
   options: CheckModelOptions,
-  runConfigCheck: (options: CheckOptions) => Promise<boolean>
+  generateSchema: (options: GenerateSchemaOptions) => Promise<ConfigSchema>,
+  checkObject: (options: CheckObjectOptions) => boolean
 ): Promise<CaseResult> {
   const { testCase, model, mode, verbose } = options;
   const caseResults: TestResult[] = [];
@@ -38,7 +43,21 @@ export async function checkModelForTestCase(
   console.log('='.repeat(60));
 
   try {
-    // Run all test data items for this test case
+    // Generate schema ONCE for this test case (shared by all test data items)
+    console.log('\n--- Generating Schema ---');
+    const schema = await generateSchema({
+      checkDescription: testCase.checkDescription,
+      objectJsonSchema: testCase.objectJsonSchema,
+      verbose,
+      mode,
+      model,
+    });
+
+    console.log('Generated config:');
+    console.log(JSON.stringify(schema, null, 2));
+    console.log('');
+
+    // Run all test data items against the same schema
     for (let i = 0; i < testCase.testData.length; i++) {
       const testItem = testCase.testData[i];
       if (!testItem) {
@@ -48,13 +67,10 @@ export async function checkModelForTestCase(
 
       const objectJson = JSON.stringify(testItem.data, null, 2);
 
-      const result = await runConfigCheck({
-        checkDescription: testCase.checkDescription,
-        objectJsonSchema: testCase.objectJsonSchema,
+      const result = checkObject({
+        schema,
         objectJson,
         verbose,
-        mode,
-        model,
       });
 
       const passed = result === testItem.expectedResult;

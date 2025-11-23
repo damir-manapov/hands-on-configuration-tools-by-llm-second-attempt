@@ -12,8 +12,8 @@ import {
   MODEL_LISTS,
   getModels,
   getAvailableModelLists,
-} from './model-lists.js';
-import { TEST_CASES } from './test-cases.js';
+} from '../src/config/model-lists.js';
+import { TEST_CASES } from '../src/benchmark/test-cases.js';
 
 async function main() {
   const args = process.argv.slice(2);

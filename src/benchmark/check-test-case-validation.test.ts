@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { validateTestCase, type TestCase } from './check-test-case.js';
 import type { ConfigSchema } from '../core/config-checker.js';
-import { TEST_CASES } from '../../scripts/test-cases.js';
+import { TEST_CASES } from './test-cases.js';
 
 describe('validateTestCase', () => {
   it('should validate test cases with reference config', () => {

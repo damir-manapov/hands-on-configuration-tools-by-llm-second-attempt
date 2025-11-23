@@ -1,5 +1,5 @@
-import type { TestCase } from '../src/benchmark/check-test-case.js';
-import type { ConfigSchema } from '../src/core/config-checker.js';
+import type { TestCase } from './check-test-case.js';
+import type { ConfigSchema } from '../core/config-checker.js';
 
 export const TEST_CASES: TestCase[] = [
   {

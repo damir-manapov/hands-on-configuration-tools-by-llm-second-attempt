@@ -9,7 +9,10 @@ importers:
     dependencies:
       openai:
         specifier: ^6.9.1
-        version: 6.9.1
+        version: 6.9.1(zod@3.25.76)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -1692,6 +1695,12 @@ packages:
       }
     engines: { node: '>=10' }
 
+  zod@3.25.76:
+    resolution:
+      {
+        integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==,
+      }
+
 snapshots:
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
@@ -2365,7 +2374,9 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  openai@6.9.1: {}
+  openai@6.9.1(zod@3.25.76):
+    optionalDependencies:
+      zod: 3.25.76
 
   optionator@0.9.4:
     dependencies:
@@ -2586,3 +2597,5 @@ snapshots:
   word-wrap@1.2.5: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@3.25.76: {}

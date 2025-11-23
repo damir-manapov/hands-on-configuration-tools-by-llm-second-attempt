@@ -7,7 +7,7 @@ export class SchemaGenerationError extends Error {
     message: string,
     public readonly lastError?: string,
     public readonly lastResponse?: string,
-    public readonly attempts = 3
+    public readonly attempts?: number
   ) {
     super(message);
     this.name = 'SchemaGenerationError';
@@ -27,7 +27,7 @@ export class InvalidJsonError extends Error {
 }
 
 export class MissingApiKeyError extends Error {
-  constructor(message = 'OPENROUTER_API_KEY environment variable is not set') {
+  constructor(message: string) {
     super(message);
     this.name = 'MissingApiKeyError';
     Object.setPrototypeOf(this, MissingApiKeyError.prototype);

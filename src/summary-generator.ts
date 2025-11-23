@@ -11,10 +11,7 @@ export interface Summary {
   models: ModelSummary[];
 }
 
-export function generateSummary(
-  results: CaseResult[],
-  models: string[]
-): Summary {
+export function generateSummary(results: CaseResult[]): Summary {
   // Group results by model
   const resultsByModel = new Map<string, CaseResult[]>();
   for (const result of results) {
@@ -24,20 +21,20 @@ export function generateSummary(
     resultsByModel.get(result.model)!.push(result);
   }
 
-  // Generate summary for each model
+  // Generate summary for each model (in order they appear in results)
   const modelSummaries: ModelSummary[] = [];
-  for (const model of models) {
-    const modelResults = resultsByModel.get(model);
-    if (!modelResults || modelResults.length === 0) {
-      continue;
+  const seenModels = new Set<string>();
+  for (const result of results) {
+    if (!seenModels.has(result.model)) {
+      seenModels.add(result.model);
+      const modelResults = resultsByModel.get(result.model)!;
+      const score = calculateModelScore(result.model, modelResults);
+      modelSummaries.push({
+        model: result.model,
+        score,
+        caseResults: modelResults,
+      });
     }
-
-    const score = calculateModelScore(model, modelResults);
-    modelSummaries.push({
-      model,
-      score,
-      caseResults: modelResults,
-    });
   }
 
   return {

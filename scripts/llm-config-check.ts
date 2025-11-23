@@ -258,7 +258,7 @@ async function main() {
   }
 
   // Generate and print summary
-  const summary = generateSummary(results, MODELS);
+  const summary = generateSummary(results);
 
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');

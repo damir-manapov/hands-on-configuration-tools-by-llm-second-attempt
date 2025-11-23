@@ -100,10 +100,11 @@ ConfigSchema:
     ? `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(jsonSchema, null, 2)}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`
     : `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`;
 
-  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-    { role: 'system', content: systemMessage },
-    { role: 'user', content: userContent },
-  ];
+  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] =
+    [
+      { role: 'system', content: systemMessage },
+      { role: 'user', content: userContent },
+    ];
 
   let lastError: string | undefined;
   let lastResponse: string | undefined;

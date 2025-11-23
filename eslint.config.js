@@ -9,14 +9,32 @@ export default [
   },
   ...tseslint.configs.recommendedTypeChecked.map((config) => ({
     ...config,
-    files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    files: [
+      'src/**/*.ts',
+      'scripts/**/*.ts',
+      'test/**/*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+    ],
   })),
   ...tseslint.configs.stylisticTypeChecked.map((config) => ({
     ...config,
-    files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    files: [
+      'src/**/*.ts',
+      'scripts/**/*.ts',
+      'test/**/*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+    ],
   })),
   {
-    files: ['src/**/*.ts', 'test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    files: [
+      'src/**/*.ts',
+      'scripts/**/*.ts',
+      'test/**/*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+    ],
     languageOptions: {
       parserOptions: {
         project: ['./tsconfig.json', './tsconfig.test.json'],

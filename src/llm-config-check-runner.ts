@@ -1,6 +1,7 @@
 import { OpenRouterClient } from './openrouter-client.js';
 import { ConfigChecker } from './config-checker.js';
 import { generateConfigFromLLM } from './llm-config-generator.js';
+import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
 
 export interface CheckOptions {
   checkDescription: string;
@@ -9,6 +10,7 @@ export interface CheckOptions {
   apiKey?: string;
   model?: string;
   verbose?: boolean;
+  useTools?: boolean;
 }
 
 export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
@@ -37,7 +39,9 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   if (options.verbose) {
     console.log('Generating config schema from LLM...');
     if (options.jsonSchema) {
-      console.log(`Reference JSON Schema: ${JSON.stringify(options.jsonSchema, null, 2)}`);
+      console.log(
+        `Reference JSON Schema: ${JSON.stringify(options.jsonSchema, null, 2)}`
+      );
     }
     console.log('');
   }
@@ -46,13 +50,21 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   console.log(`Object to check: ${JSON.stringify(objectToCheck, null, 2)}`);
   console.log('');
 
-  const schema = await generateConfigFromLLM(
-    client,
-    options.checkDescription,
-    options.jsonSchema,
-    3,
-    options.verbose
-  );
+  const schema = options.useTools
+    ? await generateConfigFromLLMWithTools(
+        client,
+        options.checkDescription,
+        options.jsonSchema,
+        3,
+        options.verbose
+      )
+    : await generateConfigFromLLM(
+        client,
+        options.checkDescription,
+        options.jsonSchema,
+        3,
+        options.verbose
+      );
 
   console.log('Generated config:');
   console.log(JSON.stringify(schema, null, 2));

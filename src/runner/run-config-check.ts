@@ -1,7 +1,6 @@
 import { OpenRouterClient } from '../core/openrouter-client.js';
 import { ConfigChecker } from '../core/config-checker.js';
-import { generateConfigFromLLM } from '../llm/llm-config-generator.js';
-import { generateConfigFromLLMWithTools } from '../llm/llm-config-generator-tools.js';
+import { getSchemaGenerator } from '../llm/schema-generator-registry.js';
 import { MissingApiKeyError, InvalidJsonError } from '../core/errors.js';
 import type { Mode } from '../analysis/score-calculator.js';
 
@@ -51,22 +50,15 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   console.log(`Object to check: ${JSON.stringify(objectToCheck, null, 2)}`);
   console.log('');
 
-  const schema =
-    options.mode === 'toolBased'
-      ? await generateConfigFromLLMWithTools(
-          client,
-          options.checkDescription,
-          options.objectJsonSchema,
-          3,
-          options.verbose
-        )
-      : await generateConfigFromLLM(
-          client,
-          options.checkDescription,
-          options.objectJsonSchema,
-          3,
-          options.verbose
-        );
+  const mode = options.mode ?? 'toolBased';
+  const generator = getSchemaGenerator(mode);
+  const schema = await generator(
+    client,
+    options.checkDescription,
+    options.objectJsonSchema,
+    3,
+    options.verbose
+  );
 
   console.log('Generated config:');
   console.log(JSON.stringify(schema, null, 2));

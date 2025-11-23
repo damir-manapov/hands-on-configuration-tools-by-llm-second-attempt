@@ -2,6 +2,14 @@
 
 import { runConfigCheck } from '../src/llm-config-check-runner.js';
 
+// Models to test against
+const MODELS = [
+  'openai/gpt-3.5-turbo',
+  'openai/gpt-4o-mini',
+  'anthropic/claude-3.5-sonnet',
+  'google/gemini-flash-1.5',
+];
+
 interface TestData {
   data: unknown;
   expectedResult: boolean;
@@ -147,7 +155,9 @@ async function main() {
   let allPassed = true;
   const results: {
     caseName: string;
+    model: string;
     mode: 'toolBased' | 'promptBased';
+    error?: string;
     testResults: {
       testIndex: number;
       passed: boolean;
@@ -157,122 +167,103 @@ async function main() {
   }[] = [];
 
   for (const testCase of casesToRun) {
-    const caseResults: {
-      testIndex: number;
-      passed: boolean;
-      expected: boolean;
-      actual: boolean;
-    }[] = [];
-    const mode: 'toolBased' | 'promptBased' = useTools
-      ? 'toolBased'
-      : 'promptBased';
-    console.log(`\n${'='.repeat(60)}`);
-    console.log(`Test Case: ${testCase.name}`);
-    console.log('='.repeat(60));
+    for (const model of MODELS) {
+      const caseResults: {
+        testIndex: number;
+        passed: boolean;
+        expected: boolean;
+        actual: boolean;
+      }[] = [];
+      const mode: 'toolBased' | 'promptBased' = useTools
+        ? 'toolBased'
+        : 'promptBased';
+      let caseError: string | undefined;
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`Test Case: ${testCase.name} | Model: ${model}`);
+      console.log('='.repeat(60));
 
-    // If custom object JSON provided, use it for a single check
-    if (customObjectJson) {
       try {
-        const result = await runConfigCheck({
-          checkDescription: testCase.checkDescription,
-          objectJsonSchema: testCase.objectJsonSchema,
-          objectJson: customObjectJson,
-          verbose,
-          useTools,
-        });
-
-        if (!result) {
-          allPassed = false;
-        }
-        caseResults.push({
-          testIndex: 0,
-          passed: result,
-          expected: true,
-          actual: result,
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(`Error in test case "${testCase.name}":`, errorMessage);
-        // If error occurred, treat as FAIL (false)
-        // For custom object, we assume expected is PASS (true)
-        const actual = false;
-        const expected = true;
-        const passed = false; // Error means it failed, so doesn't match expected PASS
-        allPassed = false;
-        caseResults.push({
-          testIndex: 0,
-          passed,
-          expected,
-          actual,
-        });
-      }
-    } else {
-      // Run all test data items for this test case
-      for (let i = 0; i < testCase.testData.length; i++) {
-        const testItem = testCase.testData[i];
-        if (!testItem) {
-          continue;
-        }
-        console.log(`\n--- Test Data ${i + 1}/${testCase.testData.length} ---`);
-
-        const objectJson = JSON.stringify(testItem.data, null, 2);
-
-        try {
+        // If custom object JSON provided, use it for a single check
+        if (customObjectJson) {
           const result = await runConfigCheck({
             checkDescription: testCase.checkDescription,
             objectJsonSchema: testCase.objectJsonSchema,
-            objectJson,
+            objectJson: customObjectJson,
             verbose,
             useTools,
+            model,
           });
 
-          const passed = result === testItem.expectedResult;
-          if (!passed) {
-            console.error(
-              `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
-            );
+          if (!result) {
             allPassed = false;
-          } else {
-            console.log(
-              `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
-            );
           }
           caseResults.push({
-            testIndex: i + 1,
-            passed,
-            expected: testItem.expectedResult,
+            testIndex: 0,
+            passed: result,
+            expected: true,
             actual: result,
           });
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          console.error(
-            `Error in test case "${testCase.name}", test data ${i + 1}:`,
-            errorMessage
-          );
-          // If error occurred, treat as FAIL (false)
-          // Check if this matches the expected result
-          const actual = false;
-          const passed = actual === testItem.expectedResult;
-          if (!passed) {
-            allPassed = false;
-          }
-          caseResults.push({
-            testIndex: i + 1,
-            passed,
-            expected: testItem.expectedResult,
-            actual,
-          });
-        }
-      }
-    }
+        } else {
+          // Run all test data items for this test case
+          for (let i = 0; i < testCase.testData.length; i++) {
+            const testItem = testCase.testData[i];
+            if (!testItem) {
+              continue;
+            }
+            console.log(
+              `\n--- Test Data ${i + 1}/${testCase.testData.length} ---`
+            );
 
-    results.push({
-      caseName: testCase.name,
-      mode,
-      testResults: caseResults,
-    });
+            const objectJson = JSON.stringify(testItem.data, null, 2);
+
+            const result = await runConfigCheck({
+              checkDescription: testCase.checkDescription,
+              objectJsonSchema: testCase.objectJsonSchema,
+              objectJson,
+              verbose,
+              useTools,
+              model,
+            });
+
+            const passed = result === testItem.expectedResult;
+            if (!passed) {
+              console.error(
+                `\n✗ Mismatch: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
+              );
+              allPassed = false;
+            } else {
+              console.log(
+                `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
+              );
+            }
+            caseResults.push({
+              testIndex: i + 1,
+              passed,
+              expected: testItem.expectedResult,
+              actual: result,
+            });
+          }
+        }
+      } catch (error) {
+        // Unexpected error that prevented tests from running
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        caseError = errorMessage;
+        console.error(
+          `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}":`,
+          errorMessage
+        );
+        allPassed = false;
+      }
+
+      results.push({
+        caseName: testCase.name,
+        model,
+        mode,
+        ...(caseError ? { error: caseError } : {}),
+        testResults: caseResults,
+      });
+    }
   }
 
   // Print detailed summary
@@ -281,22 +272,29 @@ async function main() {
   console.log('='.repeat(60));
 
   for (const caseResult of results) {
-    const casePassed = caseResult.testResults.every((r) => r.passed);
-    const passedCount = caseResult.testResults.filter((r) => r.passed).length;
-    const totalCount = caseResult.testResults.length;
-
-    console.log(
-      `\n${caseResult.caseName}: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
-    );
-
-    for (const testResult of caseResult.testResults) {
-      const status = testResult.passed ? '✓' : '✗';
-      const expectedStr = testResult.expected ? 'PASS' : 'FAIL';
-      const actualStr = testResult.actual ? 'PASS' : 'FAIL';
-      const matchStr = testResult.passed ? 'Match' : 'Mismatch';
+    if (caseResult.error) {
       console.log(
-        `  ${status} Test ${testResult.testIndex}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
+        `\n${caseResult.caseName} [${caseResult.model}] [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
       );
+      console.log(`  Error: ${caseResult.error}`);
+    } else {
+      const casePassed = caseResult.testResults.every((r) => r.passed);
+      const passedCount = caseResult.testResults.filter((r) => r.passed).length;
+      const totalCount = caseResult.testResults.length;
+
+      console.log(
+        `\n${caseResult.caseName} [${caseResult.model}] [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
+      );
+
+      for (const testResult of caseResult.testResults) {
+        const status = testResult.passed ? '✓' : '✗';
+        const expectedStr = testResult.expected ? 'PASS' : 'FAIL';
+        const actualStr = testResult.actual ? 'PASS' : 'FAIL';
+        const matchStr = testResult.passed ? 'Match' : 'Mismatch';
+        console.log(
+          `  ${status} Test ${testResult.testIndex}: Expected ${expectedStr}, Got ${actualStr} (${matchStr})`
+        );
+      }
     }
   }
 

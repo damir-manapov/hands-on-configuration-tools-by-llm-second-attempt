@@ -2,6 +2,7 @@ import { OpenRouterClient } from './openrouter-client.js';
 import { ConfigChecker } from './config-checker.js';
 import { generateConfigFromLLM } from './llm-config-generator.js';
 import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
+import { MissingApiKeyError, InvalidJsonError } from './errors.js';
 
 export interface CheckOptions {
   checkDescription: string;
@@ -16,7 +17,7 @@ export interface CheckOptions {
 export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error(
+    throw new MissingApiKeyError(
       'OPENROUTER_API_KEY environment variable is not set. Please set it with: export OPENROUTER_API_KEY="your-api-key"'
     );
   }
@@ -31,8 +32,9 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
   try {
     objectToCheck = JSON.parse(options.objectJson);
   } catch (error) {
-    throw new Error(
-      `Invalid JSON object: ${error instanceof Error ? error.message : String(error)}`
+    throw new InvalidJsonError(
+      `Invalid JSON object: ${error instanceof Error ? error.message : String(error)}`,
+      error
     );
   }
 

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { OpenRouterClient } from './openrouter-client.js';
 import { type ConfigSchema } from './config-checker.js';
+import { SchemaGenerationError } from './errors.js';
 
 const CheckRuleSchema: z.ZodType<ConfigSchema> = z.lazy(() =>
   z.record(
@@ -346,6 +347,22 @@ Important rules:
           });
           continue;
         }
+      } else if (!schemaGenerated) {
+        // LLM didn't call generate_schema tool
+        lastError = lastError ?? 'LLM did not call generate_schema tool';
+        if (attempt < maxRetries) {
+          if (verbose) {
+            console.log(
+              `Attempt ${attempt}: LLM did not call generate_schema tool. Retrying...`
+            );
+          }
+          messages.push({
+            role: 'user',
+            content:
+              'Please use the generate_schema tool function to provide the complete schema.',
+          });
+          continue;
+        }
       }
     } else {
       // Got content instead of tool calls - this shouldn't happen, but handle it
@@ -369,7 +386,10 @@ Important rules:
     }
   }
 
-  throw new Error(
-    `Failed to generate valid config schema after ${maxRetries} attempts. Last error: ${lastError}`
+  throw new SchemaGenerationError(
+    `Failed to generate valid config schema after ${maxRetries} attempts`,
+    lastError,
+    undefined,
+    maxRetries
   );
 }

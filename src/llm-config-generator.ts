@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { OpenRouterClient } from './openrouter-client.js';
 import { type ConfigSchema } from './config-checker.js';
+import { SchemaGenerationError } from './errors.js';
 
 const CheckRuleSchema: z.ZodType<ConfigSchema> = z.lazy(() =>
   z.record(
@@ -171,7 +172,8 @@ ConfigSchema:
         continue;
       }
     } catch (error) {
-      lastError = `Failed to parse as JSON: ${error instanceof Error ? error.message : String(error)}`;
+      const jsonError = error instanceof Error ? error.message : String(error);
+      lastError = `Failed to parse as JSON: ${jsonError}`;
       if (verbose) {
         console.log(`\n✗ JSON parsing failed: ${lastError}`);
       }
@@ -191,8 +193,11 @@ ConfigSchema:
     }
   }
 
-  throw new Error(
-    `Failed to generate valid config schema after ${maxRetries} attempts. Last error: ${lastError}. Last response: ${lastResponse}`
+  throw new SchemaGenerationError(
+    `Failed to generate valid config schema after ${maxRetries} attempts`,
+    lastError,
+    lastResponse,
+    maxRetries
   );
 }
 

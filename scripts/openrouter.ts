@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { OpenRouterClient } from '../src/openrouter-client.js';
+import { OpenRouterClient } from '../src/core/openrouter-client.js';
 
 async function main() {
   const apiKey = process.env.OPENROUTER_API_KEY;

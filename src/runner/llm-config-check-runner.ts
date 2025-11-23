@@ -1,9 +1,9 @@
-import { OpenRouterClient } from './openrouter-client.js';
-import { ConfigChecker } from './config-checker.js';
-import { generateConfigFromLLM } from './llm-config-generator.js';
-import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js';
-import { MissingApiKeyError, InvalidJsonError } from './errors.js';
-import type { Mode } from './score-calculator.js';
+import { OpenRouterClient } from '../core/openrouter-client.js';
+import { ConfigChecker } from '../core/config-checker.js';
+import { generateConfigFromLLM } from '../llm/llm-config-generator.js';
+import { generateConfigFromLLMWithTools } from '../llm/llm-config-generator-tools.js';
+import { MissingApiKeyError, InvalidJsonError } from '../core/errors.js';
+import type { Mode } from '../analysis/score-calculator.js';
 
 export interface CheckOptions {
   checkDescription: string;

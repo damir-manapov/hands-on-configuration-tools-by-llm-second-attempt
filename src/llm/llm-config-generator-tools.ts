@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { OpenRouterClient } from './openrouter-client.js';
-import { type ConfigSchema } from './config-checker.js';
-import { SchemaGenerationError } from './errors.js';
+import { OpenRouterClient } from '../core/openrouter-client.js';
+import { type ConfigSchema } from '../core/config-checker.js';
+import { SchemaGenerationError } from '../core/errors.js';
 
 const CheckRuleSchema: z.ZodType<ConfigSchema> = z.lazy(() =>
   z.record(

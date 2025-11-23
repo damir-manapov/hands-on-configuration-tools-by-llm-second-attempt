@@ -1,4 +1,8 @@
-import type { CaseResult, TestResult, Mode } from './score-calculator.js';
+import type {
+  CaseResult,
+  TestResult,
+  Mode,
+} from '../analysis/score-calculator.js';
 import type { CheckOptions } from './llm-config-check-runner.js';
 
 export interface TestData {

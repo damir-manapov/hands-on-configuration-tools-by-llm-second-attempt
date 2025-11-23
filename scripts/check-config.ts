@@ -1,6 +1,9 @@
 #!/usr/bin/env tsx
 
-import { ConfigChecker, type ConfigSchema } from '../src/config-checker.js';
+import {
+  ConfigChecker,
+  type ConfigSchema,
+} from '../src/core/config-checker.js';
 
 const schema: ConfigSchema = {
   name: { type: 'required' },

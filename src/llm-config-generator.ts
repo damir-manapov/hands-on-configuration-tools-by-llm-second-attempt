@@ -4,6 +4,7 @@ import { type ConfigSchema } from './config-checker.js';
 
 const CheckRuleSchema: z.ZodType<ConfigSchema> = z.lazy(() =>
   z.record(
+    z.string(),
     z.union([
       z.object({
         type: z.literal('required'),
@@ -47,7 +48,7 @@ function validateConfigSchema(schema: unknown): {
     return { valid: true };
   }
 
-  const errors = result.error.errors;
+  const errors = result.error.issues;
   const errorMessages = errors.map((err) => {
     const path = err.path.length > 0 ? err.path.join('.') : 'root';
     return `${path}: ${err.message}`;
@@ -62,7 +63,7 @@ function validateConfigSchema(schema: unknown): {
 export async function generateConfigFromLLM(
   client: OpenRouterClient,
   checkDescription: string,
-  jsonSchema?: unknown,
+  objectJsonSchema: unknown,
   maxRetries = 3,
   verbose = false
 ): Promise<ConfigSchema> {
@@ -96,9 +97,7 @@ ConfigSchema:
   "email": {"type": "string"}
 }`;
 
-  const userContent = jsonSchema
-    ? `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(jsonSchema, null, 2)}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`
-    : `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`;
+  const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`;
 
   const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] =
     [
@@ -197,8 +196,10 @@ ConfigSchema:
   );
 }
 
-export function createPromptForConfigGeneration(jsonSchema: unknown): string {
-  const schemaStr = JSON.stringify(jsonSchema, null, 2);
+export function createPromptForConfigGeneration(
+  objectJsonSchema: unknown
+): string {
+  const schemaStr = JSON.stringify(objectJsonSchema, null, 2);
 
   return `You are a configuration schema converter. Convert a JSON Schema to a ConfigSchema format for the ConfigChecker tool.
 

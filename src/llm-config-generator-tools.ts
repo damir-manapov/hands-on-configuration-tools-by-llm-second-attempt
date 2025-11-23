@@ -4,6 +4,7 @@ import { type ConfigSchema } from './config-checker.js';
 
 const CheckRuleSchema: z.ZodType<ConfigSchema> = z.lazy(() =>
   z.record(
+    z.string(),
     z.union([
       z.object({
         type: z.literal('required'),
@@ -47,7 +48,7 @@ function validateConfigSchema(schema: unknown): {
     return { valid: true };
   }
 
-  const errors = result.error.errors;
+  const errors = result.error.issues;
   const errorMessages = errors.map((err) => {
     const path = err.path.length > 0 ? err.path.join('.') : 'root';
     return `${path}: ${err.message}`;
@@ -63,166 +64,89 @@ const CONFIG_SCHEMA_TOOLS = [
   {
     type: 'function' as const,
     function: {
-      name: 'add_required_field',
+      name: 'generate_schema',
       description:
-        'Add a required field to the configuration schema. This field must be present in the object.',
+        'Generate the complete configuration schema. Provide the entire schema as a JSON object where each field maps to a rule object.',
       parameters: {
         type: 'object',
         properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the field that is required',
+          schema: {
+            type: 'object',
+            description:
+              'The complete ConfigSchema object. Each field name maps to a rule object.',
+            additionalProperties: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['required'] },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['string'] },
+                    minLength: { type: 'number' },
+                    maxLength: { type: 'number' },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['number'] },
+                    min: { type: 'number' },
+                    max: { type: 'number' },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['boolean'] },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['array'] },
+                    minItems: { type: 'number' },
+                    maxItems: { type: 'number' },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['object'] },
+                  },
+                  required: ['type'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'string', enum: ['oneOf'] },
+                    values: {
+                      type: 'array',
+                      items: {},
+                    },
+                  },
+                  required: ['type', 'values'],
+                  additionalProperties: false,
+                },
+              ],
+            },
           },
         },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_string_field',
-      description:
-        'Add a string field to the configuration schema with optional length constraints.',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the string field',
-          },
-          minLength: {
-            type: 'number',
-            description: 'Minimum length of the string (optional)',
-          },
-          maxLength: {
-            type: 'number',
-            description: 'Maximum length of the string (optional)',
-          },
-        },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_number_field',
-      description:
-        'Add a number field to the configuration schema with optional min/max constraints.',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the number field',
-          },
-          min: {
-            type: 'number',
-            description: 'Minimum value (optional)',
-          },
-          max: {
-            type: 'number',
-            description: 'Maximum value (optional)',
-          },
-        },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_boolean_field',
-      description: 'Add a boolean field to the configuration schema.',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the boolean field',
-          },
-        },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_array_field',
-      description:
-        'Add an array field to the configuration schema with optional item count constraints.',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the array field',
-          },
-          minItems: {
-            type: 'number',
-            description: 'Minimum number of items (optional)',
-          },
-          maxItems: {
-            type: 'number',
-            description: 'Maximum number of items (optional)',
-          },
-        },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_object_field',
-      description: 'Add an object field to the configuration schema.',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the object field',
-          },
-        },
-        required: ['fieldName'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'add_oneof_field',
-      description:
-        'Add a field that must be one of the specified values (enum).',
-      parameters: {
-        type: 'object',
-        properties: {
-          fieldName: {
-            type: 'string',
-            description: 'The name of the field',
-          },
-          values: {
-            type: 'array',
-            description: 'Array of allowed values',
-            items: {},
-          },
-        },
-        required: ['fieldName', 'values'],
-      },
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: 'finalize_schema',
-      description:
-        'Call this function when you have finished adding all fields to the configuration schema. This will validate and return the complete schema.',
-      parameters: {
-        type: 'object',
-        properties: {},
-        required: [],
+        required: ['schema'],
       },
     },
   },
@@ -231,27 +155,22 @@ const CONFIG_SCHEMA_TOOLS = [
 export async function generateConfigFromLLMWithTools(
   client: OpenRouterClient,
   checkDescription: string,
-  jsonSchema?: unknown,
+  objectJsonSchema: unknown,
   maxRetries = 3,
   verbose = false
 ): Promise<ConfigSchema> {
   const systemMessage = `You are a configuration schema generator. Generate a ConfigSchema for the ConfigChecker tool based on a description of the target object.
 
-Use the provided tool functions to build the configuration schema step by step:
-1. For required fields: use add_required_field
-2. For optional typed fields: use the appropriate add_*_field function
-3. Each field should be added separately
-4. When done, call finalize_schema to complete
+Use the generate_schema tool function to provide the complete configuration schema in a single call.
 
 Important rules:
 - DO NOT use "custom" type
 - Required fields get {"type": "required"} rule
-- Optional fields get their type rule (string, number, boolean, array, object, oneOf)
-- Extract constraints from the description (minLength, maxLength, min, max, minItems, maxItems, enum values)`;
+- Optional fields get their type rule (string, number, boolean, array, object, oneOf) with optional constraints
+- Extract constraints from the description (minLength, maxLength, min, max, minItems, maxItems, enum values)
+- The schema should be a JSON object where each field name maps to its rule object`;
 
-  const userContent = jsonSchema
-    ? `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(jsonSchema, null, 2)}\n\nUse the tool functions to build the schema.`
-    : `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nUse the tool functions to build the schema.`;
+  const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nCall generate_schema with the complete schema.`;
 
   interface ToolCallMessage {
     role: 'assistant';
@@ -316,106 +235,39 @@ Important rules:
             unknown
           >;
 
-          if (toolCall.name === 'add_required_field') {
-            const fieldName = String(args.fieldName);
-            schema[fieldName] = { type: 'required' };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added required field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_string_field') {
-            const fieldName = String(args.fieldName);
-            const minLength =
-              args.minLength !== undefined ? Number(args.minLength) : undefined;
-            const maxLength =
-              args.maxLength !== undefined ? Number(args.maxLength) : undefined;
-            schema[fieldName] = {
-              type: 'string',
-              ...(minLength !== undefined && { minLength }),
-              ...(maxLength !== undefined && { maxLength }),
-            };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added string field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_number_field') {
-            const fieldName = String(args.fieldName);
-            const min = args.min !== undefined ? Number(args.min) : undefined;
-            const max = args.max !== undefined ? Number(args.max) : undefined;
-            schema[fieldName] = {
-              type: 'number',
-              ...(min !== undefined && { min }),
-              ...(max !== undefined && { max }),
-            };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added number field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_boolean_field') {
-            const fieldName = String(args.fieldName);
-            schema[fieldName] = { type: 'boolean' };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added boolean field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_array_field') {
-            const fieldName = String(args.fieldName);
-            const minItems =
-              args.minItems !== undefined ? Number(args.minItems) : undefined;
-            const maxItems =
-              args.maxItems !== undefined ? Number(args.maxItems) : undefined;
-            schema[fieldName] = {
-              type: 'array',
-              ...(minItems !== undefined && { minItems }),
-              ...(maxItems !== undefined && { maxItems }),
-            };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added array field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_object_field') {
-            const fieldName = String(args.fieldName);
-            schema[fieldName] = { type: 'object' };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added object field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'add_oneof_field') {
-            const fieldName = String(args.fieldName);
-            const values = Array.isArray(args.values) ? args.values : [];
-            schema[fieldName] = { type: 'oneOf', values };
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: true,
-                message: `Added oneOf field: ${fieldName}`,
-              }),
-            });
-          } else if (toolCall.name === 'finalize_schema') {
+          if (toolCall.name === 'generate_schema') {
+            const providedSchema = args.schema;
+            if (
+              typeof providedSchema !== 'object' ||
+              providedSchema === null ||
+              Array.isArray(providedSchema)
+            ) {
+              toolResults.push({
+                id: toolCall.id,
+                content: JSON.stringify({
+                  success: false,
+                  error: 'Schema must be an object',
+                }),
+              });
+              continue;
+            }
+
+            // Copy the provided schema
+            Object.assign(schema, providedSchema as ConfigSchema);
+
             // Validate the schema
             const validation = validateConfigSchema(schema);
             if (validation.valid) {
               if (verbose) {
                 console.log('\n✓ Schema validation passed!');
               }
+              toolResults.push({
+                id: toolCall.id,
+                content: JSON.stringify({
+                  success: true,
+                  message: 'Schema generated and validated successfully',
+                }),
+              });
               return schema;
             }
 
@@ -475,11 +327,11 @@ Important rules:
         console.log('\nCurrent schema:', JSON.stringify(schema, null, 2));
       }
 
-      // If finalize_schema was called but validation failed, continue to retry
-      const finalized = response.toolCalls.some(
-        (tc) => tc.name === 'finalize_schema'
+      // If generate_schema was called but validation failed, continue to retry
+      const schemaGenerated = response.toolCalls.some(
+        (tc) => tc.name === 'generate_schema'
       );
-      if (finalized && lastError) {
+      if (schemaGenerated && lastError) {
         if (attempt < maxRetries) {
           if (verbose) {
             console.log(
@@ -490,7 +342,7 @@ Important rules:
           Object.keys(schema).forEach((key) => delete schema[key]);
           messages.push({
             role: 'user',
-            content: `The schema has validation errors. Please fix them and rebuild:\n\nError: ${lastError}`,
+            content: `The schema has validation errors. Please fix them and regenerate:\n\nError: ${lastError}`,
           });
           continue;
         }
@@ -510,7 +362,7 @@ Important rules:
         messages.push({
           role: 'user',
           content:
-            'Please use the tool functions to build the schema. Do not return JSON directly.',
+            'Please use the generate_schema tool function to provide the complete schema. Do not return JSON directly.',
         });
         continue;
       }

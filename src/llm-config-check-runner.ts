@@ -6,7 +6,7 @@ import { generateConfigFromLLMWithTools } from './llm-config-generator-tools.js'
 export interface CheckOptions {
   checkDescription: string;
   objectJson: string;
-  jsonSchema?: unknown;
+  objectJsonSchema: unknown;
   apiKey?: string;
   model?: string;
   verbose?: boolean;
@@ -38,11 +38,9 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
 
   if (options.verbose) {
     console.log('Generating config schema from LLM...');
-    if (options.jsonSchema) {
-      console.log(
-        `Reference JSON Schema: ${JSON.stringify(options.jsonSchema, null, 2)}`
-      );
-    }
+    console.log(
+      `Reference JSON Schema: ${JSON.stringify(options.objectJsonSchema, null, 2)}`
+    );
     console.log('');
   }
 
@@ -54,14 +52,14 @@ export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
     ? await generateConfigFromLLMWithTools(
         client,
         options.checkDescription,
-        options.jsonSchema,
+        options.objectJsonSchema,
         3,
         options.verbose
       )
     : await generateConfigFromLLM(
         client,
         options.checkDescription,
-        options.jsonSchema,
+        options.objectJsonSchema,
         3,
         options.verbose
       );

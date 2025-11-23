@@ -136,8 +136,8 @@ With `--verbose` flag, it also shows:
 ### How It Works
 
 1. **Check Description**: A natural language description of what to validate (e.g., "User object with required name, age, email...")
-2. **JSON Schema Reference**: Optional JSON Schema that describes the object structure, types, and required fields (without constraints)
-3. **LLM Generation**: The LLM generates a `ConfigSchema` based on the description, using the JSON Schema as a structural reference
+2. **Object JSON Schema Reference**: Required JSON Schema that describes the object structure, types, and required fields (without constraints)
+3. **LLM Generation**: The LLM generates a `ConfigSchema` based on the description, using the Object JSON Schema as a structural reference
    - **Default (Tool Calling)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
    - **Prompt-based (`--no-tools`)**: Uses direct JSON generation via prompts with retry logic
 4. **Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)

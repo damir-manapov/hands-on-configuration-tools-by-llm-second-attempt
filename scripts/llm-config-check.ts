@@ -10,7 +10,7 @@ interface TestData {
 interface TestCase {
   name: string;
   checkDescription: string;
-  jsonSchema: {
+  objectJsonSchema: {
     type: 'object';
     required: string[];
     properties: Record<string, { type: string; items?: { type: string } }>;
@@ -22,7 +22,7 @@ const TEST_CASES: TestCase[] = [
   {
     name: 'User',
     checkDescription: `User object with required name (string, 2-50 chars), age (number, 18-120), email (string, min 5 chars), optional active (boolean), and optional tags (array of strings, max 10 items)`,
-    jsonSchema: {
+    objectJsonSchema: {
       type: 'object',
       required: ['name', 'age', 'email'],
       properties: {
@@ -70,7 +70,7 @@ const TEST_CASES: TestCase[] = [
   {
     name: 'Product',
     checkDescription: `Product object with required id (string), name (string, 3-100 chars), price (number, min 0), optional description (string, max 500 chars), optional inStock (boolean), and optional categories (array of strings)`,
-    jsonSchema: {
+    objectJsonSchema: {
       type: 'object',
       required: ['id', 'name', 'price'],
       properties: {
@@ -147,6 +147,7 @@ async function main() {
   let allPassed = true;
   const results: {
     caseName: string;
+    mode: 'toolBased' | 'promptBased';
     testResults: {
       testIndex: number;
       passed: boolean;
@@ -162,6 +163,9 @@ async function main() {
       expected: boolean;
       actual: boolean;
     }[] = [];
+    const mode: 'toolBased' | 'promptBased' = useTools
+      ? 'toolBased'
+      : 'promptBased';
     console.log(`\n${'='.repeat(60)}`);
     console.log(`Test Case: ${testCase.name}`);
     console.log('='.repeat(60));
@@ -171,7 +175,7 @@ async function main() {
       try {
         const result = await runConfigCheck({
           checkDescription: testCase.checkDescription,
-          jsonSchema: testCase.jsonSchema,
+          objectJsonSchema: testCase.objectJsonSchema,
           objectJson: customObjectJson,
           verbose,
           useTools,
@@ -217,7 +221,7 @@ async function main() {
         try {
           const result = await runConfigCheck({
             checkDescription: testCase.checkDescription,
-            jsonSchema: testCase.jsonSchema,
+            objectJsonSchema: testCase.objectJsonSchema,
             objectJson,
             verbose,
             useTools,
@@ -266,6 +270,7 @@ async function main() {
 
     results.push({
       caseName: testCase.name,
+      mode,
       testResults: caseResults,
     });
   }
@@ -280,7 +285,9 @@ async function main() {
     const passedCount = caseResult.testResults.filter((r) => r.passed).length;
     const totalCount = caseResult.testResults.length;
 
-    console.log(`\n${caseResult.caseName}: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`);
+    console.log(
+      `\n${caseResult.caseName}: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
+    );
 
     for (const testResult of caseResult.testResults) {
       const status = testResult.passed ? '✓' : '✗';

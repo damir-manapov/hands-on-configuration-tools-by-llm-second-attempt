@@ -129,6 +129,7 @@ tsx scripts/llm-config-check.ts --models=top --mode=toolBased user
 tsx scripts/llm-config-check.ts --models=openai,anthropic --verbose
 tsx scripts/llm-config-check.ts --models=topScored --mode=promptBased
 tsx scripts/llm-config-check.ts --models=mistralAll --mode=promptBased
+tsx scripts/llm-config-check.ts --models=topScoredMistral --mode=promptBased
 
 # Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose
@@ -143,15 +144,16 @@ The script includes predefined model lists for easy selection:
 - **`all`** - All available models (default)
 - **`top`** - Top tier models (best quality)
 - **`topScored`** - Top performing models based on benchmark results (18 models)
+- **`topScoredMistral`** - Top performing Mistral models based on benchmark results (19 models)
 - **`fast`** - Fast models (good balance of speed and quality)
 - **`reasoning`** - Reasoning models (specialized for complex reasoning)
 - **`openai`** - All OpenAI models
 - **`anthropic`** - All Anthropic models
 - **`google`** - All Google models
-- **`opensource`** - Open source models (Meta, DeepSeek)
+- **`openweight`** - Open-weight models with publicly available weights (includes Meta Llama with Llama Community License, DeepSeek with MIT license, and Mistral models with Apache 2.0 license)
 - **`qwen`** - All Qwen models
 - **`mistral`** - Selected Mistral models (5 models)
-- **`mistralAll`** - All Mistral models from OpenRouter (28 models) - includes embeddings, code models, reasoning models, and multimodal models
+- **`mistralAll`** - All valid Mistral models from OpenRouter (29 models) - extracted from OpenRouter API, includes code models, reasoning models, multimodal models, and all Mistral 7B variants (excludes embeddings, audio models, and free/thinking variants)
 
 You can combine multiple lists and individual models using comma-separated values:
 

@@ -44,12 +44,24 @@ const MODEL_LISTS: Record<string, string[]> = {
     'google/gemini-2.0-flash-exp',
   ],
 
-  // Open source models
-  opensource: [
+  // Open-weight models (model weights available, various licenses)
+  openweight: [
+    // Meta Llama models (Llama Community License)
     'meta-llama/llama-3.1-405b-instruct',
+    // DeepSeek models (MIT license)
     'deepseek/deepseek-chat-v3',
     'deepseek/deepseek-chat-v3.1',
     'deepseek/deepseek-chat-v3.2-exp',
+    // Mistral open-weight models (Apache 2.0 license)
+    'mistralai/mistral-7b-instruct',
+    'mistralai/mistral-7b-instruct-v0.1',
+    'mistralai/mistral-7b-instruct-v0.2',
+    'mistralai/mistral-7b-instruct-v0.3',
+    'mistralai/mixtral-8x7b-instruct',
+    'mistralai/mistral-small-3.1-24b-instruct',
+    'mistralai/devstral-small-2505',
+    'mistralai/pixtral-12b',
+    'mistralai/ministral-8b',
   ],
 
   // Qwen models
@@ -71,41 +83,45 @@ const MODEL_LISTS: Record<string, string[]> = {
     'mistralai/mistral-small',
   ],
 
-  // All Mistral models from OpenRouter
+  // All Mistral models from OpenRouter (extracted from API: https://openrouter.ai/api/v1/models)
   mistralAll: [
-    // Medium models
-    'mistralai/mistral-medium-3.1',
-    'mistralai/mistral-medium-3',
     // Code models
-    'mistralai/codestral-2508',
     'mistralai/codestral-2501',
+    'mistralai/codestral-2508',
     'mistralai/devstral-medium',
-    'mistralai/devstral-small-1.1',
+    'mistralai/devstral-small',
     'mistralai/devstral-small-2505',
-    // Small models
-    'mistralai/mistral-small-3.2-24b',
-    'mistralai/mistral-small-3.1-24b',
-    'mistralai/mistral-small-3',
-    'mistralai/mistral-small',
     // Reasoning models
     'mistralai/magistral-medium-2506',
     'mistralai/magistral-small-2506',
     // Ministral models
-    'mistralai/ministral-8b',
     'mistralai/ministral-3b',
+    'mistralai/ministral-8b',
+    // Medium models
+    'mistralai/mistral-medium-3',
+    'mistralai/mistral-medium-3.1',
+    // Small models
+    'mistralai/mistral-small',
+    'mistralai/mistral-small-24b-instruct-2501',
+    'mistralai/mistral-small-3.1-24b-instruct',
+    'mistralai/mistral-small-3.2-24b-instruct',
     // Large models
-    'mistralai/mistral-large-2411',
-    'mistralai/mistral-large-2407',
     'mistralai/mistral-large',
+    'mistralai/mistral-large-2407',
+    'mistralai/mistral-large-2411',
     // Multimodal models
-    'mistralai/pixtral-large-2411',
     'mistralai/pixtral-12b',
+    'mistralai/pixtral-large-2411',
     // Other models
+    'mistralai/mistral-7b-instruct',
+    'mistralai/mistral-7b-instruct-v0.1',
+    'mistralai/mistral-7b-instruct-v0.2',
+    'mistralai/mistral-7b-instruct-v0.3',
     'mistralai/mistral-nemo',
+    'mistralai/mistral-saba',
+    'mistralai/mistral-tiny',
     'mistralai/mixtral-8x22b-instruct',
     'mistralai/mixtral-8x7b-instruct',
-    'mistralai/saba',
-    'mistralai/mistral-tiny',
   ],
 
   // Top tier models (best quality)
@@ -197,6 +213,29 @@ const MODEL_LISTS: Record<string, string[]> = {
     'deepseek/deepseek-chat-v3.1',
     'deepseek/deepseek-chat-v3',
     // 'google/gemini-2.5-pro',
+  ],
+
+  // Top scored mistral models
+  topScoredMistral: [
+    'mistralai/ministral-3b',
+    'mistralai/codestral-2508',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/devstral-medium',
+    'mistralai/ministral-8b',
+    'mistralai/codestral-2501',
+    'mistralai/mistral-medium-3.1',
+    'mistralai/mistral-tiny',
+    'mistralai/mistral-small',
+    'mistralai/mistral-small-3.1-24b-instruct',
+    'mistralai/mistral-saba',
+    'mistralai/mistral-large-2407',
+    'mistralai/mistral-nemo',
+    'mistralai/mistral-medium-3',
+    'mistralai/mistral-large',
+    'mistralai/mistral-7b-instruct',
+    'mistralai/mistral-small-24b-instruct-2501',
+    'mistralai/mistral-small-3.2-24b-instruct',
+    'mistralai/mistral-7b-instruct-v0.1',
   ],
 };
 

@@ -1,5 +1,6 @@
 import type { OpenRouterClient } from '../../core/openrouter-client.js';
 import type { ConfigSchema } from '../../core/config-checker.js';
+import { UnregisteredModeError } from '../../core/errors.js';
 import { generateConfigFromLLM } from './prompt-based.js';
 import { generateConfigFromLLMWithTools } from './tool-based.js';
 import type { Mode } from '../../benchmark/score-calculator.js';
@@ -40,13 +41,16 @@ class ConfigGeneratorRegistry {
 
   /**
    * Get the config generator for a specific mode.
-   * @throws Error if mode is not registered
+   * @throws UnregisteredModeError if mode is not registered
    */
   get(mode: Mode): ConfigGenerator {
     const generator = this.generators.get(mode);
     if (!generator) {
-      throw new Error(
-        `No config generator registered for mode: ${mode}. Available modes: ${Array.from(this.generators.keys()).join(', ')}`
+      const availableModes = Array.from(this.generators.keys());
+      throw new UnregisteredModeError(
+        `No config generator registered for mode: ${mode}. Available modes: ${availableModes.join(', ')}`,
+        mode,
+        availableModes
       );
     }
     return generator;

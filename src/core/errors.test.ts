@@ -5,6 +5,9 @@ import {
   MissingApiKeyError,
   InvalidSchemaError,
   ConnectionError,
+  UnregisteredModeError,
+  InvalidResponseError,
+  UnsupportedToolCallError,
 } from './errors.js';
 
 describe('Custom Error Classes', () => {
@@ -105,6 +108,68 @@ describe('Custom Error Classes', () => {
     });
   });
 
+  describe('UnregisteredModeError', () => {
+    it('should create error with message, mode, and available modes', () => {
+      const error = new UnregisteredModeError('Mode not found', 'unknownMode', [
+        'toolBased',
+        'promptBased',
+      ]);
+
+      expect(error).toBeInstanceOf(Error);
+      expect({
+        name: error.name,
+        message: error.message,
+        mode: error.mode,
+        availableModes: error.availableModes,
+      }).toEqual({
+        name: 'UnregisteredModeError',
+        message: 'Mode not found',
+        mode: 'unknownMode',
+        availableModes: ['toolBased', 'promptBased'],
+      });
+    });
+  });
+
+  describe('InvalidResponseError', () => {
+    it('should create error with message and response type', () => {
+      const error = new InvalidResponseError(
+        'No content in response',
+        'chat_completion'
+      );
+
+      expect(error).toBeInstanceOf(Error);
+      expect({
+        name: error.name,
+        message: error.message,
+        responseType: error.responseType,
+      }).toEqual({
+        name: 'InvalidResponseError',
+        message: 'No content in response',
+        responseType: 'chat_completion',
+      });
+    });
+  });
+
+  describe('UnsupportedToolCallError', () => {
+    it('should create error with message and tool call type', () => {
+      const error = new UnsupportedToolCallError(
+        'Unsupported tool call type',
+        'unknown_type'
+      );
+
+      expect(error).toBeInstanceOf(Error);
+      expect({
+        name: error.name,
+        message: error.message,
+        toolCallType: error.toolCallType,
+      }).toEqual({
+        name: 'UnsupportedToolCallError',
+        message: 'Unsupported tool call type',
+        toolCallType: 'unknown_type',
+      });
+    });
+  });
+
   describe('Error inheritance', () => {
     it('should maintain proper prototype chain', () => {
       const schemaError = new SchemaGenerationError('test');
@@ -112,6 +177,9 @@ describe('Custom Error Classes', () => {
       const apiKeyError = new MissingApiKeyError('test');
       const schemaValidationError = new InvalidSchemaError('test');
       const connectionErr = new ConnectionError('test');
+      const unregisteredModeError = new UnregisteredModeError('test', 'mode');
+      const invalidResponseError = new InvalidResponseError('test');
+      const unsupportedToolCallError = new UnsupportedToolCallError('test');
 
       const errors = [
         schemaError,
@@ -119,6 +187,9 @@ describe('Custom Error Classes', () => {
         apiKeyError,
         schemaValidationError,
         connectionErr,
+        unregisteredModeError,
+        invalidResponseError,
+        unsupportedToolCallError,
       ];
 
       errors.forEach((error) => {
@@ -131,6 +202,9 @@ describe('Custom Error Classes', () => {
         'MissingApiKeyError',
         'InvalidSchemaError',
         'ConnectionError',
+        'UnregisteredModeError',
+        'InvalidResponseError',
+        'UnsupportedToolCallError',
       ]);
     });
   });

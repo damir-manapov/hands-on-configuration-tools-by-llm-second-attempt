@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { InvalidResponseError, UnsupportedToolCallError } from './errors.js';
 
 export interface OpenRouterConfig {
   apiKey: string;
@@ -29,7 +30,10 @@ export class OpenRouterClient {
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('No content in response');
+      throw new InvalidResponseError(
+        'No content in response',
+        'chat_completion'
+      );
     }
 
     return content;
@@ -74,7 +78,10 @@ export class OpenRouterClient {
 
     const message = response.choices[0]?.message;
     if (!message) {
-      throw new Error('No message in response');
+      throw new InvalidResponseError(
+        'No message in response',
+        'chat_completion_with_tools'
+      );
     }
 
     if (message.tool_calls && message.tool_calls.length > 0) {
@@ -88,14 +95,20 @@ export class OpenRouterClient {
               arguments: tc.function.arguments,
             };
           }
-          throw new Error(`Unsupported tool call type: ${tc.type}`);
+          throw new UnsupportedToolCallError(
+            `Unsupported tool call type: ${tc.type}`,
+            tc.type
+          );
         }),
       };
     }
 
     const content = message.content;
     if (!content) {
-      throw new Error('No content in response');
+      throw new InvalidResponseError(
+        'No content in response',
+        'chat_completion_with_tools'
+      );
     }
 
     return { type: 'content', content };

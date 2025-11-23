@@ -228,7 +228,7 @@ async function main() {
 
   // Build table data with average speed
   const tableData: string[][] = [
-    ['Model', 'Mode', 'Cases', 'Score', 'Avg Time', 'Status'],
+    ['Model', 'Mode', 'Cases', 'Tests', 'Score', 'Avg Time', 'Status'],
   ];
 
   // Helper function to format time
@@ -257,6 +257,18 @@ async function main() {
       );
     const status = hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
     const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
+    
+    // Calculate total tests (sum of all testResults lengths)
+    const totalTests = modelSummary.caseResults.reduce(
+      (sum, r) => sum + r.testResults.length,
+      0
+    );
+    const passedTests = modelSummary.caseResults.reduce(
+      (sum, r) => sum + r.testResults.filter((tr) => tr.passed).length,
+      0
+    );
+    const testsStr = `${passedTests}/${totalTests}`;
+    
     const scoreStr = modelSummary.score.score.toFixed(3);
     const avgTimeStr = formatTime(modelSummary.score.averageTime);
     // Get mode from first case result (all should have the same mode)
@@ -269,6 +281,7 @@ async function main() {
       modelSummary.model,
       modeStr,
       casesStr,
+      testsStr,
       scoreStr,
       avgTimeStr,
       status,
@@ -277,7 +290,7 @@ async function main() {
 
   // Print markdown table
   console.log(
-    markdownTable(tableData, { align: ['l', 'l', 'r', 'r', 'r', 'r'] })
+    markdownTable(tableData, { align: ['l', 'l', 'r', 'r', 'r', 'r', 'r'] })
   );
   console.log('');
   console.log('='.repeat(60));

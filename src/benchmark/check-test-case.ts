@@ -5,6 +5,7 @@ import type {
 } from '../checker/run-config-check.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 import { InvalidModelError, getErrorMessage } from '../core/errors.js';
+import { ConfigChecker } from '../core/config-checker.js';
 
 export interface TestData {
   data: Record<string, unknown>;
@@ -20,6 +21,7 @@ export interface TestCase {
     properties: Record<string, { type: string; items?: { type: string } }>;
   };
   testData: TestData[];
+  referenceConfig: ConfigSchema;
 }
 
 export interface CheckModelOptions {
@@ -127,4 +129,51 @@ export async function checkModelForTestCase(
     testResults: caseResults,
     duration,
   };
+}
+
+/**
+ * Validates test data against a reference config to ensure correctness.
+ * Checks required fields and validates against the reference config.
+ * @param testCase - The test case to validate
+ * @returns Array of validation errors (empty if all test data is correct)
+ */
+export function validateTestCase(testCase: TestCase): string[] {
+  const errors: string[] = [];
+
+  const requiredFields = testCase.objectJsonSchema.required || [];
+  const checker = new ConfigChecker(testCase.referenceConfig);
+
+  for (let i = 0; i < testCase.testData.length; i++) {
+    const testItem = testCase.testData[i];
+    if (!testItem) {
+      continue;
+    }
+
+    // Check required fields
+    const missingRequiredFields = requiredFields.filter(
+      (field) =>
+        !(field in testItem.data) ||
+        testItem.data[field] === null ||
+        testItem.data[field] === undefined
+    );
+
+    // Determine expected result based on required fields and reference config
+    const hasRequiredFields = missingRequiredFields.length === 0;
+    const passesReferenceConfig = checker.check(testItem.data);
+    const actualResult = hasRequiredFields && passesReferenceConfig;
+
+    if (actualResult !== testItem.expectedResult) {
+      if (!hasRequiredFields && testItem.expectedResult) {
+        errors.push(
+          `Test case "${testCase.name}", test data item ${i + 1}: Expected PASS but required fields are missing: ${missingRequiredFields.join(', ')}. Data: ${JSON.stringify(testItem.data)}`
+        );
+      } else {
+        errors.push(
+          `Test case "${testCase.name}", test data item ${i + 1}: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, but reference config returned ${actualResult ? 'PASS' : 'FAIL'}. Data: ${JSON.stringify(testItem.data)}`
+        );
+      }
+    }
+  }
+
+  return errors;
 }

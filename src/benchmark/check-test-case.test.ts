@@ -36,6 +36,9 @@ describe('checkModelForTestCase', () => {
       },
     },
     testData,
+    referenceConfig: {
+      name: { type: 'string' },
+    },
   });
 
   it('should generate schema once and check all test data items', async () => {

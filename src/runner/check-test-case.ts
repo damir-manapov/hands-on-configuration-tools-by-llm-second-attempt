@@ -35,6 +35,7 @@ export async function checkModelForTestCase(
   const { testCase, model, mode, verbose } = options;
   const caseResults: TestResult[] = [];
   let caseError: string | undefined;
+  const startTime = Date.now();
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`Test Case: ${testCase.name} | Model: ${model}`);
@@ -86,11 +87,15 @@ export async function checkModelForTestCase(
     );
   }
 
+  const endTime = Date.now();
+  const duration = endTime - startTime;
+
   return {
     caseName: testCase.name,
     model,
     mode,
     ...(caseError ? { error: caseError } : {}),
     testResults: caseResults,
+    duration,
   };
 }

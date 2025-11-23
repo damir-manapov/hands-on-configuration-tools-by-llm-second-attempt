@@ -8,12 +8,14 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
@@ -25,6 +27,7 @@ describe('calculateModelScore', () => {
       totalCases: 2,
       successfulCases: 2,
       score: 0, // log(2/2) = log(1) = 0
+      averageTime: 1500, // (1000 + 2000) / 2
     });
   });
 
@@ -34,6 +37,7 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -47,6 +51,7 @@ describe('calculateModelScore', () => {
       totalCases: 1,
       successfulCases: 0,
       score: 0,
+      averageTime: 1000,
     });
   });
 
@@ -56,12 +61,14 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -75,6 +82,7 @@ describe('calculateModelScore', () => {
       totalCases: 2,
       successfulCases: 1,
       score: Math.log(2 / 1), // log(2) ≈ 0.693
+      averageTime: 1500, // (1000 + 2000) / 2
     });
   });
 
@@ -84,6 +92,7 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         error: 'Some error',
         testResults: [],
       },
@@ -91,6 +100,7 @@ describe('calculateModelScore', () => {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
@@ -102,6 +112,7 @@ describe('calculateModelScore', () => {
       totalCases: 2,
       successfulCases: 1,
       score: Math.log(2 / 1),
+      averageTime: 1500, // (1000 + 2000) / 2
     });
   });
 
@@ -111,6 +122,7 @@ describe('calculateModelScore', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [
           { passed: true, expected: true, passedAsExpected: true },
           { passed: false, expected: true, passedAsExpected: false },
@@ -125,6 +137,7 @@ describe('calculateModelScore', () => {
       totalCases: 1,
       successfulCases: 0,
       score: 0,
+      averageTime: 1000,
     });
   });
 
@@ -138,6 +151,43 @@ describe('calculateModelScore', () => {
       totalCases: 0,
       successfulCases: 0,
       score: 0,
+      averageTime: 0,
+    });
+  });
+
+  it('should calculate average time when durations are provided', () => {
+    const results: CaseResult[] = [
+      {
+        caseName: 'Test1',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 1000,
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
+      },
+      {
+        caseName: 'Test2',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 2000,
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
+      },
+      {
+        caseName: 'Test3',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 3000,
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
+      },
+    ];
+
+    const score = calculateModelScore('model1', results);
+
+    expect(score).toEqual({
+      model: 'model1',
+      totalCases: 3,
+      successfulCases: 3,
+      score: 0,
+      averageTime: 2000, // (1000 + 2000 + 3000) / 3 = 2000
     });
   });
 });

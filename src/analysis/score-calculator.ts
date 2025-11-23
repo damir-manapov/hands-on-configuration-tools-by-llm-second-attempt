@@ -12,6 +12,7 @@ export interface CaseResult {
   mode: Mode;
   error?: string;
   testResults: TestResult[];
+  duration: number; // Duration in milliseconds
 }
 
 export interface ModelScore {
@@ -19,6 +20,7 @@ export interface ModelScore {
   totalCases: number;
   successfulCases: number;
   score: number;
+  averageTime: number; // Average time in milliseconds
 }
 
 export function calculateModelScore(
@@ -35,10 +37,17 @@ export function calculateModelScore(
   const score =
     successfulCases > 0 ? Math.log(totalCases / successfulCases) : 0;
 
+  // Calculate average time
+  const averageTime =
+    results.length > 0
+      ? results.reduce((sum, r) => sum + r.duration, 0) / results.length
+      : 0;
+
   return {
     model,
     totalCases,
     successfulCases,
     score,
+    averageTime,
   };
 }

@@ -9,12 +9,14 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model2',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
@@ -29,6 +31,7 @@ describe('generateSummary', () => {
           totalCases: 1,
           successfulCases: 1,
           score: 0,
+          averageTime: 1000,
         },
         caseResults: [results[0]],
       },
@@ -39,6 +42,7 @@ describe('generateSummary', () => {
           totalCases: 1,
           successfulCases: 1,
           score: 0,
+          averageTime: 2000,
         },
         caseResults: [results[1]],
       },
@@ -51,24 +55,28 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test3',
         model: 'model2',
         mode: 'toolBased',
+        duration: 1500,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test4',
         model: 'model2',
         mode: 'toolBased',
+        duration: 2500,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -83,12 +91,14 @@ describe('generateSummary', () => {
         totalCases: 2,
         successfulCases: 2,
         score: 0,
+        averageTime: 1500, // (1000 + 2000) / 2
       },
       {
         model: 'model2',
         totalCases: 2,
         successfulCases: 1,
         score: Math.log(2 / 1),
+        averageTime: 2000, // (1500 + 2500) / 2
       },
     ]);
   });
@@ -99,12 +109,14 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model1',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'promptBased',
+        duration: 2000,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -130,18 +142,21 @@ describe('generateSummary', () => {
         caseName: 'Test1',
         model: 'model3',
         mode: 'toolBased',
+        duration: 1000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test2',
         model: 'model1',
         mode: 'toolBased',
+        duration: 2000,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
         caseName: 'Test3',
         model: 'model2',
         mode: 'toolBased',
+        duration: 1500,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];

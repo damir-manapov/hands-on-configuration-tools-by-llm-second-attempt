@@ -306,8 +306,27 @@ async function main() {
   console.log('='.repeat(60));
   console.log('');
 
-  // Build table data
-  const tableData: string[][] = [['Model', 'Cases', 'Score', 'Status']];
+  // Build table data with average speed
+  const tableData: string[][] = [
+    ['Model', 'Cases', 'Score', 'Avg Time', 'Status'],
+  ];
+
+  // Helper function to format time
+  const formatTime = (ms: number): string => {
+    if (ms === 0) {
+      return 'N/A';
+    }
+    if (ms < 1000) {
+      return `${ms}ms`;
+    }
+    const seconds = ms / 1000;
+    if (seconds < 60) {
+      return `${seconds.toFixed(1)}s`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}m ${remainingSeconds}s`;
+  };
 
   for (const modelSummary of summary.models) {
     const hasErrors = modelSummary.caseResults.some((r) => r.error);
@@ -319,12 +338,19 @@ async function main() {
     const status = hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
     const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
     const scoreStr = modelSummary.score.score.toFixed(3);
+    const avgTimeStr = formatTime(modelSummary.score.averageTime);
 
-    tableData.push([modelSummary.model, casesStr, scoreStr, status]);
+    tableData.push([
+      modelSummary.model,
+      casesStr,
+      scoreStr,
+      avgTimeStr,
+      status,
+    ]);
   }
 
   // Print markdown table
-  console.log(markdownTable(tableData, { align: ['l', 'r', 'r', 'r'] }));
+  console.log(markdownTable(tableData, { align: ['l', 'r', 'r', 'r', 'r'] }));
   console.log('');
   console.log('='.repeat(60));
   console.log(`Overall: ${allPassed ? 'ALL PASSED' : 'SOME FAILED'}`);

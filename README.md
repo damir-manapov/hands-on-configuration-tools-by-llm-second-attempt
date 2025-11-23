@@ -98,26 +98,61 @@ The LLM Config Checker uses multiple LLM models to generate validation schemas b
 # Set your OpenRouter API key
 export OPENROUTER_API_KEY="your-api-key"
 
-# Run all test cases across all models (uses tool calling by default)
+# Run all test cases across all models with all modes (default)
 tsx scripts/llm-config-check.ts
 
-# Run a specific test case by name (across all models)
+# List available model lists
+tsx scripts/llm-config-check.ts --list-models
+
+# Run with specific model list(s) (comma-separated)
+tsx scripts/llm-config-check.ts --models=top
+tsx scripts/llm-config-check.ts --models=openai,anthropic
+tsx scripts/llm-config-check.ts --models=fast,reasoning
+
+# Run with individual model(s) or mix of lists and models
+tsx scripts/llm-config-check.ts --models=openai/gpt-4o,anthropic/claude-sonnet-4.5
+tsx scripts/llm-config-check.ts --models=top,openai/gpt-3.5-turbo
+
+# Run a specific test case by name
 tsx scripts/llm-config-check.ts user
 tsx scripts/llm-config-check.ts product
 
 # Run with custom object JSON (adds to all test cases)
 tsx scripts/llm-config-check.ts '{"name":"Jane","age":25,"email":"jane@example.com"}'
 
-# Use prompt-based generation instead of tool calling
+# Use specific mode(s) - if not specified, tests both toolBased and promptBased
 tsx scripts/llm-config-check.ts --mode=promptBased
-
-# Use tool-based generation (default)
 tsx scripts/llm-config-check.ts --mode=toolBased
+
+# Combine options
+tsx scripts/llm-config-check.ts --models=top --mode=toolBased user
+tsx scripts/llm-config-check.ts --models=openai,anthropic --verbose
 
 # Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose
 tsx scripts/llm-config-check.ts user --verbose
 tsx scripts/llm-config-check.ts --mode=promptBased --verbose
+```
+
+### Model Lists
+
+The script includes predefined model lists for easy selection:
+
+- **`all`** - All available models (default)
+- **`top`** - Top tier models (best quality)
+- **`fast`** - Fast models (good balance of speed and quality)
+- **`reasoning`** - Reasoning models (specialized for complex reasoning)
+- **`openai`** - All OpenAI models
+- **`anthropic`** - All Anthropic models
+- **`google`** - All Google models
+- **`opensource`** - Open source models (Meta, DeepSeek)
+- **`qwen`** - All Qwen models
+- **`mistral`** - All Mistral models
+
+You can combine multiple lists and individual models using comma-separated values:
+
+```bash
+tsx scripts/llm-config-check.ts --models=top,fast,openai/gpt-3.5-turbo
 ```
 
 ### Output

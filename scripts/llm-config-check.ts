@@ -9,55 +9,211 @@ import {
   type TestCase,
 } from '../src/benchmark/check-test-case.js';
 
-// Models to test against
-// Selected based on: highest quality (speed and price not a concern)
+// Named model lists for easy selection
 // See https://openrouter.ai/models for full list
-const MODELS = [
-  // OpenAI - Highest Quality
-  'openai/gpt-5.1', // Latest GPT-5.1 model (if available)
-  'openai/gpt-5.1-instant', // GPT-5.1 Instant mode (if available)
-  'openai/gpt-5.1-thinking', // GPT-5.1 Thinking mode (if available)
-  'openai/gpt-4o', // Versatile high-quality GPT-4 model
-  'openai/gpt-4-turbo', // Advanced GPT-4 variant
-  'openai/o1-preview', // OpenAI's reasoning model (chain-of-thought)
-  'openai/o1', // Production reasoning model
+const MODEL_LISTS: Record<string, string[]> = {
+  // OpenAI models
+  openai: [
+    'openai/gpt-5.1',
+    'openai/gpt-5.1-instant',
+    'openai/gpt-5.1-thinking',
+    'openai/gpt-4o',
+    'openai/gpt-4-turbo',
+    'openai/o1-preview',
+    'openai/o1',
+  ],
 
-  // Anthropic - Highest Quality
-  'anthropic/claude-sonnet-4.5', // Latest Sonnet 4.5 - best for real-world agents, coding, 30+ hour autonomous operation
-  'anthropic/claude-haiku-4.5', // Latest Haiku 4.5 - 2x faster than Sonnet 4, 1/3 cost, matches coding performance
-  'anthropic/claude-3-opus', // Anthropic's flagship model (highest quality)
-  'anthropic/claude-3.5-sonnet', // Best reasoning and coding capabilities
-  'anthropic/claude-3.5-opus', // Latest Claude Opus variant (if available)
+  // Anthropic models
+  anthropic: [
+    'anthropic/claude-sonnet-4.5',
+    'anthropic/claude-haiku-4.5',
+    'anthropic/claude-3-opus',
+    'anthropic/claude-3.5-sonnet',
+    'anthropic/claude-3.5-opus',
+  ],
 
-  // Google - Highest Quality
-  'google/gemini-3.0-pro', // Latest Gemini 3.0 Pro (if available)
-  'google/gemini-3.0-flash', // Latest Gemini 3.0 Flash (if available)
-  'google/gemini-2.5-pro', // Gemini 2.5 Pro (if available)
-  'google/gemini-1.5-pro', // High-quality Gemini 1.5 Pro
-  'google/gemini-2.0-flash-exp', // Experimental Gemini 2.0 Flash
+  // Google models
+  google: [
+    'google/gemini-3.0-pro',
+    'google/gemini-3.0-flash',
+    'google/gemini-2.5-pro',
+    'google/gemini-1.5-pro',
+    'google/gemini-2.0-flash-exp',
+  ],
 
-  // Meta - Open Source Excellence
-  'meta-llama/llama-3.1-405b-instruct', // Largest open-source model (131K context)
+  // Open source models
+  opensource: [
+    'meta-llama/llama-3.1-405b-instruct',
+    'deepseek/deepseek-chat-v3',
+    'deepseek/deepseek-chat-v3.1',
+    'deepseek/deepseek-chat-v3.2-exp',
+  ],
 
-  'deepseek/deepseek-chat-v3', // DeepSeek V3 - comparable to GPT-4, excels in math and coding
-  'deepseek/deepseek-chat-v3.1', // DeepSeek V3.1 - hybrid thinking/non-thinking modes, 40%+ improvement
-  'deepseek/deepseek-chat-v3.2-exp', // DeepSeek V3.2 Experimental - sparse attention mechanism
+  // Qwen models
+  qwen: [
+    'qwen/qwen3-max',
+    'qwen/qwen3-235b-a22b',
+    'qwen/qwen3-coder',
+    'qwen/qwen3-32b-instruct',
+    'qwen/qwen3-30b-a3b',
+    'qwen/qwen-2.5-72b-instruct',
+  ],
 
-  // Qwen - High-Quality Models
-  'qwen/qwen3-max', // Qwen3-Max - over 1 trillion parameters, strongest Qwen model
-  'qwen/qwen3-235b-a22b', // Qwen3-235B-A22B - 235B total params, 22B activated (MoE)
-  'qwen/qwen3-coder', // Qwen3-Coder - specialized for coding and agentic AI tasks
-  'qwen/qwen3-32b-instruct', // Qwen3-32B - dense model variant
-  'qwen/qwen3-30b-a3b', // Qwen3-30B-A3B - MoE model (30B total, 3B activated)
-  'qwen/qwen-2.5-72b-instruct', // Previous generation Qwen 2.5 model
+  // Mistral models
+  mistral: [
+    'mistralai/mistral-large',
+    'mistralai/mistral-large-2',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/mixtral-8x7b-instruct',
+    'mistralai/mistral-small',
+  ],
 
-  // Mistral AI - High-Quality Models
-  'mistralai/mistral-large', // Mistral Large - flagship model
-  'mistralai/mistral-large-2', // Mistral Large 2 (if available)
-  'mistralai/mixtral-8x22b-instruct', // Mixtral 8x22B - 141B total, 39B active (SMoE)
-  'mistralai/mixtral-8x7b-instruct', // Mixtral 8x7B - 56B total, 12B active (SMoE)
-  'mistralai/mistral-small', // Mistral Small - efficient variant
-];
+  // Top tier models (best quality)
+  top: [
+    'openai/gpt-5.1',
+    'openai/gpt-4o',
+    'anthropic/claude-sonnet-4.5',
+    'anthropic/claude-3-opus',
+    'google/gemini-3.0-pro',
+    'deepseek/deepseek-chat-v3',
+    'qwen/qwen3-max',
+    'mistralai/mistral-large',
+  ],
+
+  // Fast models (good balance of speed and quality)
+  fast: [
+    'openai/gpt-5.1-instant',
+    'openai/gpt-4o',
+    'anthropic/claude-haiku-4.5',
+    'google/gemini-3.0-flash',
+    'google/gemini-2.0-flash-exp',
+    'mistralai/mistral-small',
+  ],
+
+  // Reasoning models (specialized for complex reasoning)
+  reasoning: [
+    'openai/o1-preview',
+    'openai/o1',
+    'openai/gpt-5.1-thinking',
+    'deepseek/deepseek-chat-v3.1',
+  ],
+
+  // All models (default)
+  all: [
+    // OpenAI
+    'openai/gpt-5.1',
+    'openai/gpt-5.1-instant',
+    'openai/gpt-5.1-thinking',
+    'openai/gpt-4o',
+    'openai/gpt-4-turbo',
+    'openai/o1-preview',
+    'openai/o1',
+    // Anthropic
+    'anthropic/claude-sonnet-4.5',
+    'anthropic/claude-haiku-4.5',
+    'anthropic/claude-3-opus',
+    'anthropic/claude-3.5-sonnet',
+    'anthropic/claude-3.5-opus',
+    // Google
+    'google/gemini-3.0-pro',
+    'google/gemini-3.0-flash',
+    'google/gemini-2.5-pro',
+    'google/gemini-1.5-pro',
+    'google/gemini-2.0-flash-exp',
+    // Meta
+    'meta-llama/llama-3.1-405b-instruct',
+    // DeepSeek
+    'deepseek/deepseek-chat-v3',
+    'deepseek/deepseek-chat-v3.1',
+    'deepseek/deepseek-chat-v3.2-exp',
+    // Qwen
+    'qwen/qwen3-max',
+    'qwen/qwen3-235b-a22b',
+    'qwen/qwen3-coder',
+    'qwen/qwen3-32b-instruct',
+    'qwen/qwen3-30b-a3b',
+    'qwen/qwen-2.5-72b-instruct',
+    // Mistral
+    'mistralai/mistral-large',
+    'mistralai/mistral-large-2',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/mixtral-8x7b-instruct',
+    'mistralai/mistral-small',
+  ],
+
+  // Top scored models
+  topScored: [
+    // OpenAI
+    'openai/gpt-5.1',
+    'openai/gpt-5.1-instant',
+    'openai/gpt-5.1-thinking',
+    'openai/gpt-4o',
+    'openai/gpt-4-turbo',
+    'openai/o1-preview',
+    'openai/o1',
+    // Anthropic
+    'anthropic/claude-sonnet-4.5',
+    'anthropic/claude-haiku-4.5',
+    'anthropic/claude-3-opus',
+    'anthropic/claude-3.5-sonnet',
+    'anthropic/claude-3.5-opus',
+    // Google
+    'google/gemini-3.0-pro',
+    'google/gemini-3.0-flash',
+    'google/gemini-2.5-pro',
+    'google/gemini-1.5-pro',
+    'google/gemini-2.0-flash-exp',
+    // Meta
+    'meta-llama/llama-3.1-405b-instruct',
+    // DeepSeek
+    'deepseek/deepseek-chat-v3',
+    'deepseek/deepseek-chat-v3.1',
+    'deepseek/deepseek-chat-v3.2-exp',
+    // Qwen
+    'qwen/qwen3-max',
+    'qwen/qwen3-235b-a22b',
+    'qwen/qwen3-coder',
+    'qwen/qwen3-32b-instruct',
+    'qwen/qwen3-30b-a3b',
+    'qwen/qwen-2.5-72b-instruct',
+    // Mistral
+    'mistralai/mistral-large',
+    'mistralai/mistral-large-2',
+    'mistralai/mixtral-8x22b-instruct',
+    'mistralai/mixtral-8x7b-instruct',
+    'mistralai/mistral-small',
+  ],
+};
+
+/**
+ * Get models based on list names or individual model names.
+ * @param selections - Array of list names (e.g., 'openai', 'top') or individual model names
+ * @returns Array of unique model names
+ */
+function getModels(selections: string[]): string[] {
+  const models = new Set<string>();
+
+  for (const selection of selections) {
+    if (MODEL_LISTS[selection]) {
+      // It's a named list
+      for (const model of MODEL_LISTS[selection]) {
+        models.add(model);
+      }
+    } else {
+      // Assume it's an individual model name
+      models.add(selection);
+    }
+  }
+
+  return Array.from(models).sort();
+}
+
+/**
+ * Get all available model list names.
+ */
+function getAvailableModelLists(): string[] {
+  return Object.keys(MODEL_LISTS).sort();
+}
 
 const TEST_CASES: TestCase[] = [
   {
@@ -181,9 +337,46 @@ async function main() {
     }
   }
 
+  // Parse models argument - if provided, use specified lists/models; otherwise use 'all'
+  const modelsArg = args.find((arg) => arg.startsWith('--models='));
+  let modelsToTest: string[];
+  if (modelsArg) {
+    const modelsValue = modelsArg.split('=')[1];
+    if (!modelsValue) {
+      console.error('--models= requires a value');
+      console.error(`Available lists: ${getAvailableModelLists().join(', ')}`);
+      process.exit(1);
+    }
+    const selections = modelsValue.split(',').map((s) => s.trim());
+    modelsToTest = getModels(selections);
+    if (modelsToTest.length === 0) {
+      console.error(`No valid models found for: ${modelsValue}`);
+      console.error(`Available lists: ${getAvailableModelLists().join(', ')}`);
+      process.exit(1);
+    }
+  } else {
+    // Default to 'all' models
+    modelsToTest = MODEL_LISTS.all ?? [];
+  }
+
+  // Check for --list-models flag to show available model lists
+  if (args.includes('--list-models')) {
+    console.log('Available model lists:');
+    for (const [name, models] of Object.entries(MODEL_LISTS)) {
+      console.log(`  ${name}: ${models.length} models`);
+      if (verbose) {
+        models.forEach((model) => console.log(`    - ${model}`));
+      }
+    }
+    process.exit(0);
+  }
+
   const caseName = args.find(
     (arg) =>
-      !arg.startsWith('-') && !arg.includes('{') && !arg.startsWith('--mode=')
+      !arg.startsWith('-') &&
+      !arg.includes('{') &&
+      !arg.startsWith('--mode=') &&
+      !arg.startsWith('--models=')
   );
   const customObjectJson = args.find((arg) => arg.startsWith('{'));
 
@@ -233,7 +426,7 @@ async function main() {
     // Run all models with all modes concurrently for this test case
     const allPromises: Promise<CaseResult>[] = [];
     for (const mode of modesToTest) {
-      const modelPromises = MODELS.map((model) =>
+      const modelPromises = modelsToTest.map((model) =>
         checkModelForTestCase(
           {
             testCase,

@@ -236,7 +236,7 @@ Important rules:
             id: toolCall.id,
             content: JSON.stringify({
               success: false,
-              error: `Failed to parse arguments: ${error instanceof Error ? error.message : String(error)}`,
+              error: `Failed to parse arguments: ${getErrorMessage(error)}`,
             }),
           });
         }

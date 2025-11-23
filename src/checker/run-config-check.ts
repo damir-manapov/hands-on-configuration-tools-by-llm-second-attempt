@@ -91,7 +91,10 @@ export function checkObjectAgainstSchema(options: CheckObjectOptions): boolean {
   try {
     objectToCheck = JSON.parse(options.objectJson);
   } catch (error) {
-    throw new InvalidJsonError(`Invalid JSON object: ${getErrorMessage(error)}`, error);
+    throw new InvalidJsonError(
+      `Invalid JSON object: ${getErrorMessage(error)}`,
+      error
+    );
   }
 
   if (options.verbose) {

@@ -6,7 +6,8 @@ import {
   checkObjectAgainstSchema,
 } from '../src/checker/run-config-check.js';
 import { generateSummary } from '../src/benchmark/summary-generator.js';
-import type { CaseResult, Mode } from '../src/benchmark/score-calculator.js';
+import type { ScoringMethod } from '../src/benchmark/types.js';
+import type { CaseResult, Mode } from '../src/benchmark/types.js';
 import { checkModelForTestCase } from '../src/benchmark/check-test-case.js';
 import {
   MODEL_LISTS,
@@ -18,6 +19,21 @@ import { TEST_CASES } from '../src/benchmark/test-cases.js';
 async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
+
+  // Parse scoring method argument - default to 'tests'
+  const scoringMethodArg = args.find((arg) => arg.startsWith('--scoring='));
+  let scoringMethod: ScoringMethod = 'tests';
+  if (scoringMethodArg) {
+    const scoringValue = scoringMethodArg.split('=')[1];
+    if (scoringValue === 'tests' || scoringValue === 'cases') {
+      scoringMethod = scoringValue as ScoringMethod;
+    } else {
+      console.error(
+        `Invalid scoring method: ${String(scoringValue)}. Must be 'tests' or 'cases'`
+      );
+      process.exit(1);
+    }
+  }
 
   // Parse mode argument - if provided, use only that mode; otherwise test all modes
   const modeArg = args.find((arg) => arg.startsWith('--mode='));
@@ -131,6 +147,7 @@ async function main() {
     );
   }
   console.log(`Modes to test: ${modesToTest.join(', ')}`);
+  console.log(`Scoring method: ${scoringMethod}`);
   console.log(
     `Test cases: ${casesToRun.length} (${casesToRun.map((c) => c.name).join(', ')})`
   );
@@ -176,7 +193,7 @@ async function main() {
   }
 
   // Generate and print summary
-  const summary = generateSummary(results);
+  const summary = generateSummary(results, scoringMethod);
 
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');
@@ -257,7 +274,7 @@ async function main() {
       );
     const status = hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
     const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
-    
+
     // Calculate total tests (sum of all testResults lengths)
     const totalTests = modelSummary.caseResults.reduce(
       (sum, r) => sum + r.testResults.length,
@@ -268,7 +285,7 @@ async function main() {
       0
     );
     const testsStr = `${passedTests}/${totalTests}`;
-    
+
     const scoreStr = modelSummary.score.score.toFixed(3);
     const avgTimeStr = formatTime(modelSummary.score.averageTime);
     // Get mode from first case result (all should have the same mode)

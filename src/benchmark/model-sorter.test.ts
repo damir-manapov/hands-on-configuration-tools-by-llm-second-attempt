@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { sortModels } from './model-sorter.js';
-import type { ModelSummary } from './summary-generator.js';
-import type { CaseResult } from './score-calculator.js';
+import { isCaseSuccessful } from './utils.js';
+import type { ModelSummary } from './types.js';
+import type { CaseResult } from './types.js';
 
 function createModelSummary(
   model: string,
@@ -14,9 +15,7 @@ function createModelSummary(
     score: {
       model,
       totalCases: caseResults.length,
-      successfulCases: caseResults.filter(
-        (r) => !r.error && r.testResults.every((tr) => tr.passed)
-      ).length,
+      successfulCases: caseResults.filter(isCaseSuccessful).length,
       score,
       averageTime,
     },

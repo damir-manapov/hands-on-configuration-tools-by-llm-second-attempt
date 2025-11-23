@@ -1,4 +1,4 @@
-import type { CaseResult, TestResult, Mode } from './score-calculator.js';
+import type { CaseResult, TestResult, Mode, TestCase } from './types.js';
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,
@@ -6,23 +6,6 @@ import type {
 import type { ConfigSchema } from '../core/config-checker.js';
 import { InvalidModelError, getErrorMessage } from '../core/errors.js';
 import { ConfigChecker } from '../core/config-checker.js';
-
-export interface TestData {
-  data: Record<string, unknown>;
-  expectedResult: boolean;
-}
-
-export interface TestCase {
-  name: string;
-  checkDescription: string;
-  objectJsonSchema: {
-    type: 'object';
-    required: string[];
-    properties: Record<string, { type: string; items?: { type: string } }>;
-  };
-  testData: TestData[];
-  referenceConfig: ConfigSchema;
-}
 
 export interface CheckModelOptions {
   testCase: TestCase;

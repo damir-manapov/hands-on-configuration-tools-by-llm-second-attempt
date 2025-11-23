@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateSummary } from './summary-generator.js';
-import type { CaseResult } from './score-calculator.js';
+import type { CaseResult } from './types.js';
 
 describe('generateSummary', () => {
   it('should group results by model', () => {
@@ -178,6 +178,70 @@ describe('generateSummary', () => {
       'model3', // 1000ms - fastest
       'model2', // 1500ms
       'model1', // 2000ms - slowest
+    ]);
+  });
+
+  it('should support case-based scoring method', () => {
+    const results: CaseResult[] = [
+      {
+        caseName: 'Test1',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 1000,
+        testResults: [
+          { passed: true, expected: true, passedAsExpected: true },
+          { passed: true, expected: true, passedAsExpected: true },
+        ],
+      },
+      {
+        caseName: 'Test2',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 2000,
+        testResults: [{ passed: true, expected: true, passedAsExpected: true }],
+      },
+      {
+        caseName: 'Test1',
+        model: 'model2',
+        mode: 'toolBased',
+        duration: 1500,
+        testResults: [
+          { passed: true, expected: true, passedAsExpected: true },
+          { passed: false, expected: true, passedAsExpected: false },
+        ],
+      },
+      {
+        caseName: 'Test2',
+        model: 'model2',
+        mode: 'toolBased',
+        duration: 2500,
+        testResults: [
+          { passed: false, expected: true, passedAsExpected: false },
+        ],
+      },
+    ];
+
+    const summary = generateSummary(results, 'cases');
+
+    // Test1: model1 passed (1 of 2) -> weight = log(2/1) = log(2) ≈ 0.693
+    // Test2: model1 passed (1 of 2) -> weight = log(2/1) = log(2) ≈ 0.693
+    // model1: passed both cases -> score = 0.693 + 0.693 = 1.386
+    // model2: Test1 failed (one test failed), Test2 failed -> score = 0
+    expect(summary.models.map((m) => m.score)).toEqual([
+      {
+        model: 'model1',
+        totalCases: 2,
+        successfulCases: 2,
+        score: Math.log(2 / 1) + Math.log(2 / 1), // Both cases passed
+        averageTime: 1500, // (1000 + 2000) / 2
+      },
+      {
+        model: 'model2',
+        totalCases: 2,
+        successfulCases: 0, // Test1 failed (one test failed), Test2 failed
+        score: 0, // No cases passed
+        averageTime: 2000, // (1500 + 2500) / 2
+      },
     ]);
   });
 });

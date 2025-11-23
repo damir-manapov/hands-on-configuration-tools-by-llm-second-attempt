@@ -6,7 +6,7 @@ import {
   InvalidJsonError,
   getErrorMessage,
 } from '../core/errors.js';
-import type { Mode } from '../benchmark/score-calculator.js';
+import type { Mode } from '../benchmark/types.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 
 export interface CheckOptions {

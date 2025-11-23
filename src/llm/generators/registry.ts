@@ -3,7 +3,7 @@ import type { ConfigSchema } from '../../core/config-checker.js';
 import { UnregisteredModeError } from '../../core/errors.js';
 import { generateConfigFromLLM } from './prompt-based.js';
 import { generateConfigFromLLMWithTools } from './tool-based.js';
-import type { Mode } from '../../benchmark/score-calculator.js';
+import type { Mode } from '../../benchmark/types.js';
 
 /**
  * Config generator function signature.
@@ -21,7 +21,7 @@ export type ConfigGenerator = (
  * Registry of config generators for different modes.
  *
  * To add a new mode:
- * 1. Extend the `Mode` type in `src/benchmark/score-calculator.ts`:
+ * 1. Extend the `Mode` type in `src/benchmark/types.ts`:
  *    ```typescript
  *    export type Mode = 'toolBased' | 'promptBased' | 'yourNewMode';
  *    ```

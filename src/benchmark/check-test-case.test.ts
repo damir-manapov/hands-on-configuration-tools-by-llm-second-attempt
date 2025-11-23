@@ -6,7 +6,8 @@ import {
   beforeEach,
   type MockedFunction,
 } from 'vitest';
-import { checkModelForTestCase, type TestCase } from './check-test-case.js';
+import { checkModelForTestCase } from './check-test-case.js';
+import type { TestCase } from './types.js';
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,

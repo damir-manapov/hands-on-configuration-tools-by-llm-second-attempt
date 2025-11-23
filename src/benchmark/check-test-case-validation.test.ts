@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { validateTestCase, type TestCase } from './check-test-case.js';
+import { validateTestCase } from './check-test-case.js';
+import type { TestCase } from './types.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 import { TEST_CASES } from './test-cases.js';
 

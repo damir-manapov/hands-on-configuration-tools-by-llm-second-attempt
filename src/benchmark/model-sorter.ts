@@ -1,4 +1,5 @@
-import type { ModelSummary } from './summary-generator.js';
+import type { ModelSummary } from './types.js';
+import { isCaseSuccessful } from './utils.js';
 
 function getStatusPriority(status: string): number {
   switch (status) {
@@ -16,10 +17,7 @@ function getStatusPriority(status: string): number {
 function getModelStatus(modelSummary: ModelSummary): string {
   const hasErrors = modelSummary.caseResults.some((r) => r.error);
   const allPassed =
-    !hasErrors &&
-    modelSummary.caseResults.every((r) =>
-      r.testResults.every((tr) => tr.passed)
-    );
+    !hasErrors && modelSummary.caseResults.every(isCaseSuccessful);
   return hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
 }
 

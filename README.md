@@ -117,6 +117,11 @@ tsx scripts/llm-config-check.ts --models=top,openai/gpt-3.5-turbo
 tsx scripts/llm-config-check.ts user
 tsx scripts/llm-config-check.ts product
 
+# Run specific config(s) within a test case (comma-separated)
+tsx scripts/llm-config-check.ts user --configs=basicValidation
+tsx scripts/llm-config-check.ts product --configs=basicValidation,longDescription
+tsx scripts/llm-config-check.ts product --configs=longDescription
+
 # Run with custom object JSON (adds to all test cases)
 tsx scripts/llm-config-check.ts '{"name":"Jane","age":25,"email":"jane@example.com"}'
 
@@ -130,12 +135,26 @@ tsx scripts/llm-config-check.ts --models=openai,anthropic --verbose
 tsx scripts/llm-config-check.ts --models=topScored --mode=promptBased
 tsx scripts/llm-config-check.ts --models=mistralAll --mode=promptBased
 tsx scripts/llm-config-check.ts --models=topScoredMistral --mode=promptBased
+tsx scripts/llm-config-check.ts product --configs=longDescription --models=mistralai/codestral-2501 --mode=promptBased
 
 # Verbose mode (shows full LLM conversation for each model)
 tsx scripts/llm-config-check.ts --verbose
 tsx scripts/llm-config-check.ts user --verbose
 tsx scripts/llm-config-check.ts --mode=promptBased --verbose
 ```
+
+### Test Cases and Configs
+
+The script includes the following test cases:
+
+- **`user`** - User object validation
+  - `basicValidation` - Basic user validation with required fields and constraints
+
+- **`product`** - Product object validation
+  - `basicValidation` - Basic product validation with standard description constraints
+  - `longDescription` - Product validation with long description requirements (500-1000 chars)
+
+You can filter by config names using the `--configs=` flag. Config names are camelCase and short for easy CLI usage.
 
 ### Model Lists
 

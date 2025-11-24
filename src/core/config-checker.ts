@@ -3,7 +3,12 @@ export type CheckRule =
   | { type: 'string'; minLength?: number; maxLength?: number }
   | { type: 'number'; min?: number; max?: number }
   | { type: 'boolean' }
-  | { type: 'array'; minItems?: number; maxItems?: number }
+  | {
+      type: 'array';
+      minItems?: number;
+      maxItems?: number;
+      itemType?: 'string' | 'number' | 'boolean';
+    }
   | { type: 'object' }
   | { type: 'oneOf'; values: unknown[] }
   | { type: 'custom'; check: (value: unknown) => boolean };
@@ -108,6 +113,12 @@ export class ConfigChecker {
         }
         if (rule.maxItems !== undefined && value.length > rule.maxItems) {
           return false;
+        }
+        if (rule.itemType !== undefined) {
+          const expectedType = rule.itemType;
+          if (!value.every((item) => typeof item === expectedType)) {
+            return false;
+          }
         }
         return true;
 

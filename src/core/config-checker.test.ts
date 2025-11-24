@@ -66,6 +66,68 @@ describe('ConfigChecker', () => {
     expect(checker.check({ tags: 'not-array' })).toBe(false);
   });
 
+  it('should check array itemType for strings', () => {
+    const schema: ConfigSchema = {
+      tags: { type: 'array', itemType: 'string' },
+    };
+
+    const checker = new ConfigChecker(schema);
+
+    expect(checker.check({ tags: ['a', 'b', 'c'] })).toBe(true);
+    expect(checker.check({ tags: [] })).toBe(true);
+    expect(checker.check({ tags: ['single'] })).toBe(true);
+    expect(checker.check({ tags: [1, 2, 3] })).toBe(false);
+    expect(checker.check({ tags: ['valid', 123] })).toBe(false);
+    expect(checker.check({ tags: ['valid', true] })).toBe(false);
+    expect(checker.check({ tags: [1, 'mixed', true] })).toBe(false);
+  });
+
+  it('should check array itemType for numbers', () => {
+    const schema: ConfigSchema = {
+      scores: { type: 'array', itemType: 'number' },
+    };
+
+    const checker = new ConfigChecker(schema);
+
+    expect(checker.check({ scores: [1, 2, 3] })).toBe(true);
+    expect(checker.check({ scores: [] })).toBe(true);
+    expect(checker.check({ scores: [100] })).toBe(true);
+    expect(checker.check({ scores: ['1', '2'] })).toBe(false);
+    expect(checker.check({ scores: [1, '2'] })).toBe(false);
+    expect(checker.check({ scores: [1, true] })).toBe(false);
+  });
+
+  it('should check array itemType for booleans', () => {
+    const schema: ConfigSchema = {
+      flags: { type: 'array', itemType: 'boolean' },
+    };
+
+    const checker = new ConfigChecker(schema);
+
+    expect(checker.check({ flags: [true, false] })).toBe(true);
+    expect(checker.check({ flags: [] })).toBe(true);
+    expect(checker.check({ flags: [true] })).toBe(true);
+    expect(checker.check({ flags: ['true', 'false'] })).toBe(false);
+    expect(checker.check({ flags: [true, 'false'] })).toBe(false);
+    expect(checker.check({ flags: [true, 1] })).toBe(false);
+  });
+
+  it('should check array constraints combined with itemType', () => {
+    const schema: ConfigSchema = {
+      tags: { type: 'array', minItems: 1, maxItems: 5, itemType: 'string' },
+    };
+
+    const checker = new ConfigChecker(schema);
+
+    expect(checker.check({ tags: ['a', 'b'] })).toBe(true);
+    expect(checker.check({ tags: ['single'] })).toBe(true);
+    expect(checker.check({ tags: ['a', 'b', 'c', 'd', 'e'] })).toBe(true);
+    expect(checker.check({ tags: [] })).toBe(false); // minItems violation
+    expect(checker.check({ tags: ['a', 'b', 'c', 'd', 'e', 'f'] })).toBe(false); // maxItems violation
+    expect(checker.check({ tags: [1, 2, 3] })).toBe(false); // itemType violation
+    expect(checker.check({ tags: ['a', 'b', 3] })).toBe(false); // itemType violation
+  });
+
   it('should check oneOf constraint', () => {
     const schema: ConfigSchema = {
       status: { type: 'oneOf', values: ['active', 'inactive', 'pending'] },

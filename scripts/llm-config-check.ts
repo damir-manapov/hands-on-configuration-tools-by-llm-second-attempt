@@ -355,6 +355,17 @@ async function main() {
   // Generate and print summary
   const summary = generateSummary(results, scoringMethod);
 
+  // Helper function to extract model name (without provider prefix)
+  const getModelName = (fullModelId: string): string => {
+    const parts = fullModelId.split('/');
+    return parts[parts.length - 1] || fullModelId;
+  };
+
+  // Helper function to remove vowels from a string (for abbreviations)
+  const removeVowels = (str: string): string => {
+    return str.replace(/[aeiouAEIOU]/g, '');
+  };
+
   // Helper function to format time
   const formatTime = (ms: number): string => {
     if (ms === 0) {
@@ -378,7 +389,7 @@ async function main() {
 
   for (const modelSummary of summary.models) {
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`Model: ${modelSummary.model}`);
+    console.log(`Model: ${getModelName(modelSummary.model)}`);
     console.log(
       `Score: ${modelSummary.score.successfulCases}/${modelSummary.score.totalCases} (Log: ${modelSummary.score.score.toFixed(3)})`
     );
@@ -462,10 +473,10 @@ async function main() {
       const llmCallsStr = String(caseResult.llmCalls);
 
       tableData.push([
-        modelSummary.model,
-        caseResult.mode,
-        caseResult.caseName,
-        caseResult.configName,
+        getModelName(modelSummary.model),
+        removeVowels(caseResult.mode),
+        removeVowels(caseResult.caseName),
+        removeVowels(caseResult.configName),
         casesStr,
         testsStr,
         llmCallsStr,
@@ -500,6 +511,12 @@ async function main() {
 }
 
 function writeDebugFile(debugInfos: DebugInfo[]): void {
+  // Helper function to extract model name (without provider prefix)
+  const getModelName = (fullModelId: string): string => {
+    const parts = fullModelId.split('/');
+    return parts[parts.length - 1] || fullModelId;
+  };
+
   const timestamp = new Date().toISOString();
   let content = `# Debug Information for Failed Checks\n\n`;
   content += `Generated: ${timestamp}\n\n`;
@@ -514,7 +531,7 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
     }
 
     content += `## Failure ${i + 1}: ${debug.caseName}\n\n`;
-    content += `**Model:** \`${debug.model}\`  \n`;
+    content += `**Model:** \`${getModelName(debug.model)}\`  \n`;
     content += `**Mode:** \`${debug.mode}\`  \n`;
     content += `**Case:** \`${debug.caseName}\`  \n\n`;
 

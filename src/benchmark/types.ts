@@ -35,6 +35,7 @@ export interface TestCase {
 
 export interface CaseResult {
   caseName: string;
+  configName: string;
   model: string;
   mode: Mode;
   error?: string;

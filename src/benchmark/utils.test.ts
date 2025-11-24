@@ -11,6 +11,7 @@ describe('isCaseSuccessful', () => {
   it('should return true when no error and all tests passed', () => {
     const result: CaseResult = {
       caseName: 'Test1',
+      configName: 'testConfig',
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
@@ -26,6 +27,7 @@ describe('isCaseSuccessful', () => {
   it('should return false when there is an error', () => {
     const result: CaseResult = {
       caseName: 'Test1',
+      configName: 'testConfig',
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
@@ -39,6 +41,7 @@ describe('isCaseSuccessful', () => {
   it('should return false when not all tests passed', () => {
     const result: CaseResult = {
       caseName: 'Test1',
+      configName: 'testConfig',
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
@@ -54,6 +57,7 @@ describe('isCaseSuccessful', () => {
   it('should return false when all tests failed', () => {
     const result: CaseResult = {
       caseName: 'Test1',
+      configName: 'testConfig',
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
@@ -66,6 +70,7 @@ describe('isCaseSuccessful', () => {
   it('should return true when no error and empty test results (edge case)', () => {
     const result: CaseResult = {
       caseName: 'Test1',
+      configName: 'testConfig',
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
@@ -81,6 +86,7 @@ describe('calculateAverageTime', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -88,6 +94,7 @@ describe('calculateAverageTime', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
@@ -95,6 +102,7 @@ describe('calculateAverageTime', () => {
       },
       {
         caseName: 'Test3',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 3000,
@@ -113,6 +121,7 @@ describe('calculateAverageTime', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1500,
@@ -127,6 +136,7 @@ describe('calculateAverageTime', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 0,
@@ -143,6 +153,7 @@ describe('calculateTotalModels', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -150,6 +161,7 @@ describe('calculateTotalModels', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,
@@ -157,6 +169,7 @@ describe('calculateTotalModels', () => {
       },
       {
         caseName: 'Test3',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
@@ -175,6 +188,7 @@ describe('calculateTotalModels', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -189,6 +203,7 @@ describe('calculateTotalModels', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -196,6 +211,7 @@ describe('calculateTotalModels', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,

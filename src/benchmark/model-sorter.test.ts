@@ -29,6 +29,7 @@ describe('sortModels', () => {
       createModelSummary('model1', -0.693, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
@@ -40,6 +41,7 @@ describe('sortModels', () => {
       createModelSummary('model2', 0, 2000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
@@ -51,6 +53,7 @@ describe('sortModels', () => {
       createModelSummary('model3', -1.386, 1500, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
@@ -72,6 +75,7 @@ describe('sortModels', () => {
       createModelSummary('model1', 0, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
@@ -82,6 +86,7 @@ describe('sortModels', () => {
       createModelSummary('model2', 0, 2000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
@@ -93,6 +98,7 @@ describe('sortModels', () => {
       createModelSummary('model3', 0, 1500, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
@@ -113,6 +119,7 @@ describe('sortModels', () => {
       createModelSummary('model1', 0, 2000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 2000,
@@ -124,6 +131,7 @@ describe('sortModels', () => {
       createModelSummary('model2', 0, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model2',
           mode: 'toolBased',
           duration: 1000,
@@ -135,6 +143,7 @@ describe('sortModels', () => {
       createModelSummary('model3', 0, 1500, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
@@ -156,6 +165,7 @@ describe('sortModels', () => {
       createModelSummary('model1', 0, 2000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 2000,
@@ -168,6 +178,7 @@ describe('sortModels', () => {
       createModelSummary('model2', -0.693, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model2',
           mode: 'toolBased',
           duration: 1000,
@@ -180,6 +191,7 @@ describe('sortModels', () => {
       createModelSummary('model3', 0, 1500, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
@@ -192,6 +204,7 @@ describe('sortModels', () => {
       createModelSummary('model4', 0, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model4',
           mode: 'toolBased',
           duration: 1000,
@@ -222,6 +235,7 @@ describe('sortModels', () => {
       createModelSummary('model1', -0.693, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
@@ -233,6 +247,7 @@ describe('sortModels', () => {
       createModelSummary('model2', 0, 2000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
@@ -264,6 +279,7 @@ describe('sortModels', () => {
       createModelSummary('model1', 0, 1000, [
         {
           caseName: 'Test1',
+          configName: 'testConfig',
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,

@@ -12,10 +12,12 @@ function createCaseResult(
     expected: boolean;
     passedAsExpected: boolean;
   }[],
-  error?: string
+  error?: string,
+  configName = 'testConfig'
 ): CaseResult {
   return {
     caseName,
+    configName,
     model,
     mode: 'toolBased',
     duration,

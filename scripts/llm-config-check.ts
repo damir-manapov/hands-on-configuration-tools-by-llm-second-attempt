@@ -277,7 +277,8 @@ async function main() {
               }
               // Return error result instead of throwing
               return {
-                caseName: `${testCase.name} - ${config.name}`,
+                caseName: testCase.name,
+                configName: config.name,
                 model,
                 mode,
                 error: error instanceof Error ? error.message : String(error),
@@ -347,7 +348,7 @@ async function main() {
     for (const caseResult of modelSummary.caseResults) {
       if (caseResult.error) {
         console.log(
-          `\n${caseResult.caseName} [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
+          `\n${caseResult.caseName} - ${caseResult.configName} [${caseResult.mode}]: ✗ ERROR - Tests could not be run`
         );
         console.log(`  Error: ${caseResult.error}`);
       } else {
@@ -358,7 +359,7 @@ async function main() {
         const totalCount = caseResult.testResults.length;
 
         console.log(
-          `\n${caseResult.caseName} [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
+          `\n${caseResult.caseName} - ${caseResult.configName} [${caseResult.mode}]: ${casePassed ? '✓ PASSED' : '✗ FAILED'} (${passedCount}/${totalCount})`
         );
 
         caseResult.testResults.forEach((testResult, index) => {
@@ -382,7 +383,17 @@ async function main() {
 
   // Build table data with average speed
   const tableData: string[][] = [
-    ['Model', 'Mode', 'Cases', 'Tests', 'Score', 'Avg Time', 'Status'],
+    [
+      'Model',
+      'Mode',
+      'Case',
+      'Config',
+      'Cases',
+      'Tests',
+      'Score',
+      'Avg Time',
+      'Status',
+    ],
   ];
 
   // Helper function to format time
@@ -431,9 +442,26 @@ async function main() {
         ? modelSummary.caseResults[0]!.mode
         : 'N/A';
 
+    // Group case results by case name for display
+    const caseConfigs = new Map<string, string[]>();
+    for (const caseResult of modelSummary.caseResults) {
+      if (!caseConfigs.has(caseResult.caseName)) {
+        caseConfigs.set(caseResult.caseName, []);
+      }
+      caseConfigs.get(caseResult.caseName)!.push(caseResult.configName);
+    }
+
+    // Create a row with case and config info
+    const caseNames = Array.from(caseConfigs.keys());
+    const caseNameStr = caseNames.join(', ') || 'N/A';
+    const configNames =
+      Array.from(caseConfigs.values()).flat().join(', ') || 'N/A';
+
     tableData.push([
       modelSummary.model,
       modeStr,
+      caseNameStr,
+      configNames,
       casesStr,
       testsStr,
       scoreStr,
@@ -444,7 +472,9 @@ async function main() {
 
   // Print markdown table
   console.log(
-    markdownTable(tableData, { align: ['l', 'l', 'r', 'r', 'r', 'r', 'r'] })
+    markdownTable(tableData, {
+      align: ['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'l'],
+    })
   );
   console.log('');
   console.log('='.repeat(60));

@@ -7,6 +7,7 @@ describe('generateSummary', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -14,6 +15,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 2000,
@@ -55,6 +57,7 @@ describe('generateSummary', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -62,6 +65,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
@@ -69,6 +73,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
@@ -76,6 +81,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 2500,
@@ -113,6 +119,7 @@ describe('generateSummary', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -120,6 +127,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,
@@ -149,6 +157,7 @@ describe('generateSummary', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model3',
         mode: 'toolBased',
         duration: 1000,
@@ -156,6 +165,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
@@ -163,6 +173,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
@@ -185,6 +196,7 @@ describe('generateSummary', () => {
     const results: CaseResult[] = [
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
@@ -195,6 +207,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
@@ -202,6 +215,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test1',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
@@ -212,6 +226,7 @@ describe('generateSummary', () => {
       },
       {
         caseName: 'Test2',
+        configName: 'testConfig',
         model: 'model2',
         mode: 'toolBased',
         duration: 2500,

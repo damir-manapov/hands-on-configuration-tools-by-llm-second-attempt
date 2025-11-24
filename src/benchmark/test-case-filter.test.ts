@@ -9,8 +9,7 @@ describe('Test Case Filtering', () => {
         for (const config of testCase.configs) {
           // camelCase: starts with lowercase, no spaces, no special chars except allowed
           const isCamelCase =
-            /^[a-z][a-zA-Z0-9]*$/.test(config.name) &&
-            config.name.length > 0;
+            /^[a-z][a-zA-Z0-9]*$/.test(config.name) && config.name.length > 0;
           expect(isCamelCase).toBe(true);
         }
       }
@@ -133,4 +132,3 @@ describe('Test Case Filtering', () => {
     });
   });
 });
-

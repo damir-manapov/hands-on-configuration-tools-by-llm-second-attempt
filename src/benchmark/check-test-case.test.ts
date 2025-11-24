@@ -308,9 +308,11 @@ describe('checkModelForTestCase', () => {
 
     expect({
       caseName: result.caseName,
+      configName: result.configName,
       model: result.model,
     }).toEqual({
-      caseName: 'TestCase - Test config',
+      caseName: 'TestCase',
+      configName: 'Test config',
       model: 'test-model',
     });
   });

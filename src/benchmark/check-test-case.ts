@@ -44,11 +44,13 @@ export async function checkModelForTestCase(
   let caseError: string | undefined;
   let generatedSchema: ConfigSchema | undefined;
   const startTime = Date.now();
-  const caseName = `${testCase.name} - ${config.name}`;
+  const caseName = `${testCase.name} - ${config.name}`; // For backward compatibility in verbose output
 
   if (verbose) {
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`Test Case: ${caseName} | Model: ${model}`);
+    console.log(
+      `Test Case: ${testCase.name} - ${config.name} | Model: ${model}`
+    );
     console.log('='.repeat(60));
   }
 
@@ -128,7 +130,8 @@ export async function checkModelForTestCase(
   const duration = endTime - startTime;
 
   const result: CaseResult & { debugInfo?: DebugInfo } = {
-    caseName,
+    caseName: testCase.name,
+    configName: config.name,
     model,
     mode,
     ...(caseError ? { error: caseError } : {}),

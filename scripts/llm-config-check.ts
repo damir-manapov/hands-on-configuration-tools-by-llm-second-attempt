@@ -4,6 +4,7 @@
 // tsx scripts/llm-config-check.ts --models=mistralAll --mode=promptBased
 // tsx scripts/llm-config-check.ts --models=topScoredMistral --mode=promptBased
 // tsx scripts/llm-config-check.ts user --models=mistralai/codestral-2501 --mode=promptBased
+// tsx scripts/llm-config-check.ts product --models=mistralai/codestral-2501 --mode=promptBased
 
 import { markdownTable } from 'markdown-table';
 import { writeFileSync } from 'fs';
@@ -464,6 +465,9 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
       const actual = testResult.passedAsExpected ? 'PASS' : 'FAIL';
 
       content += `#### Failed Test ${failedTestCount} (Original Test ${j + 1}): Expected ${expected}, Got ${actual}\n\n`;
+      if (testData.description) {
+        content += `**What this test checks:** ${testData.description}\n\n`;
+      }
       content += `**Test Data:**\n\n\`\`\`json\n${JSON.stringify(testData.data, null, 2)}\n\`\`\`\n\n`;
       content += `**Expected Result:** ${testData.expectedResult ? 'PASS' : 'FAIL'}  \n`;
       content += `**Actual Result:** ${actual}  \n\n`;

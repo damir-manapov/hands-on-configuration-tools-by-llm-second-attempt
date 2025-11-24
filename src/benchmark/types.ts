@@ -13,6 +13,7 @@ export interface TestResult {
 export interface TestData {
   data: Record<string, unknown>;
   expectedResult: boolean;
+  description?: string; // Optional description explaining what this test case checks
 }
 
 export interface TestCase {

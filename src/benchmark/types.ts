@@ -50,6 +50,7 @@ export interface ModelScore {
   successfulCases: number;
   score: number;
   averageTime: number; // Average time in milliseconds
+  averageLlmCalls: number; // Average number of LLM calls per case
 }
 
 export interface ModelSummary {

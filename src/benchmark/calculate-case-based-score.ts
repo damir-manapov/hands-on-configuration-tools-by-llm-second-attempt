@@ -2,6 +2,7 @@ import type { CaseResult, ModelScore } from './types.js';
 import {
   isCaseSuccessful,
   calculateAverageTime,
+  calculateAverageLlmCalls,
   calculateTotalModels,
   calculateWeight,
 } from './utils.js';
@@ -55,6 +56,8 @@ export function calculateCaseBasedScore(
 
   // Calculate average time
   const averageTime = calculateAverageTime(modelModeResults);
+  // Calculate average LLM calls
+  const averageLlmCalls = calculateAverageLlmCalls(modelModeResults);
 
   return {
     model,
@@ -62,5 +65,6 @@ export function calculateCaseBasedScore(
     successfulCases,
     score, // Higher is better (positive for hard cases passed)
     averageTime,
+    averageLlmCalls,
   };
 }

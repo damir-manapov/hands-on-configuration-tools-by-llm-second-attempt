@@ -38,6 +38,7 @@ describe('generateSummary', () => {
           successfulCases: 1,
           score: Math.log(2 / 1), // log(2) ≈ 0.693
           averageTime: 1000,
+          averageLlmCalls: 1,
         },
         caseResults: [results[0]],
       },
@@ -49,6 +50,7 @@ describe('generateSummary', () => {
           successfulCases: 1,
           score: Math.log(2 / 1), // log(2) ≈ 0.693
           averageTime: 2000,
+          averageLlmCalls: 1,
         },
         caseResults: [results[1]],
       },
@@ -110,6 +112,7 @@ describe('generateSummary', () => {
         successfulCases: 2,
         score: Math.log(2 / 1), // log(2) ≈ 0.693 (Test2 weight)
         averageTime: 1500, // (1000 + 2000) / 2
+        averageLlmCalls: 1, // (1 + 1) / 2 = 1
       },
       {
         model: 'model2',
@@ -117,6 +120,7 @@ describe('generateSummary', () => {
         successfulCases: 1,
         score: 0, // Test1 weight = log(2/2) = 0
         averageTime: 2000, // (1500 + 2500) / 2
+        averageLlmCalls: 1, // (1 + 1) / 2 = 1
       },
     ]);
   });
@@ -264,6 +268,7 @@ describe('generateSummary', () => {
         successfulCases: 2,
         score: Math.log(2 / 1) + Math.log(2 / 1), // Both cases passed
         averageTime: 1500, // (1000 + 2000) / 2
+        averageLlmCalls: 1, // (1 + 1) / 2 = 1
       },
       {
         model: 'model2',
@@ -271,6 +276,7 @@ describe('generateSummary', () => {
         successfulCases: 0, // Test1 failed (one test failed), Test2 failed
         score: 0, // No cases passed
         averageTime: 2000, // (1500 + 2500) / 2
+        averageLlmCalls: 1, // (1 + 1) / 2 = 1
       },
     ]);
   });

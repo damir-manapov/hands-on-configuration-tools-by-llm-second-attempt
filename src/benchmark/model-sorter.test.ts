@@ -10,6 +10,11 @@ function createModelSummary(
   averageTime: number,
   caseResults: CaseResult[]
 ): ModelSummary {
+  // Calculate average LLM calls from case results
+  const averageLlmCalls =
+    caseResults.length > 0
+      ? caseResults.reduce((sum, r) => sum + r.llmCalls, 0) / caseResults.length
+      : 0;
   return {
     model,
     score: {
@@ -18,6 +23,7 @@ function createModelSummary(
       successfulCases: caseResults.filter(isCaseSuccessful).length,
       score,
       averageTime,
+      averageLlmCalls,
     },
     caseResults,
   };

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isCaseSuccessful,
   calculateAverageTime,
+  calculateAverageLlmCalls,
   calculateTotalModels,
   calculateWeight,
 } from './utils.js';
@@ -283,5 +284,96 @@ describe('calculateWeight', () => {
   it('should handle edge case with single model', () => {
     // When 1 out of 1 model passes: log(1/1) = 0
     expect(calculateWeight(1, 1)).toBe(0);
+  });
+});
+
+describe('calculateAverageLlmCalls', () => {
+  it('should calculate average LLM calls correctly', () => {
+    const results: CaseResult[] = [
+      {
+        caseName: 'Test1',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 1000,
+        llmCalls: 1,
+        testResults: [],
+      },
+      {
+        caseName: 'Test2',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 2000,
+        llmCalls: 2,
+        testResults: [],
+      },
+      {
+        caseName: 'Test3',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 3000,
+        llmCalls: 3,
+        testResults: [],
+      },
+    ];
+
+    expect(calculateAverageLlmCalls(results)).toBe(2); // (1 + 2 + 3) / 3 = 2
+  });
+
+  it('should return 0 for empty array', () => {
+    expect(calculateAverageLlmCalls([])).toBe(0);
+  });
+
+  it('should handle single result', () => {
+    const results: CaseResult[] = [
+      {
+        caseName: 'Test1',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 1500,
+        llmCalls: 3,
+        testResults: [],
+      },
+    ];
+
+    expect(calculateAverageLlmCalls(results)).toBe(3);
+  });
+
+  it('should round to 2 decimal places', () => {
+    const results: CaseResult[] = [
+      {
+        caseName: 'Test1',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 1000,
+        llmCalls: 1,
+        testResults: [],
+      },
+      {
+        caseName: 'Test2',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 2000,
+        llmCalls: 2,
+        testResults: [],
+      },
+      {
+        caseName: 'Test3',
+        configName: 'testConfig',
+        model: 'model1',
+        mode: 'toolBased',
+        duration: 3000,
+        llmCalls: 2,
+        testResults: [],
+      },
+    ];
+
+    // (1 + 2 + 2) / 3 = 1.666... -> should round to 1.67
+    expect(calculateAverageLlmCalls(results)).toBe(1.67);
   });
 });

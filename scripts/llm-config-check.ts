@@ -355,6 +355,23 @@ async function main() {
   // Generate and print summary
   const summary = generateSummary(results, scoringMethod);
 
+  // Helper function to format time
+  const formatTime = (ms: number): string => {
+    if (ms === 0) {
+      return 'N/A';
+    }
+    if (ms < 1000) {
+      return `${ms}ms`;
+    }
+    const seconds = ms / 1000;
+    if (seconds < 60) {
+      return `${seconds.toFixed(1)}s`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}m ${remainingSeconds}s`;
+  };
+
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');
   console.log('='.repeat(60));
@@ -364,6 +381,9 @@ async function main() {
     console.log(`Model: ${modelSummary.model}`);
     console.log(
       `Score: ${modelSummary.score.successfulCases}/${modelSummary.score.totalCases} (Log: ${modelSummary.score.score.toFixed(3)})`
+    );
+    console.log(
+      `Avg Time: ${formatTime(modelSummary.score.averageTime)}, Avg LLM Calls: ${modelSummary.score.averageLlmCalls.toFixed(2)}`
     );
     console.log('='.repeat(60));
 
@@ -412,28 +432,12 @@ async function main() {
       'Config',
       'Cases',
       'Tests',
+      'LLM Calls',
       'Score',
       'Avg Time',
       'Status',
     ],
   ];
-
-  // Helper function to format time
-  const formatTime = (ms: number): string => {
-    if (ms === 0) {
-      return 'N/A';
-    }
-    if (ms < 1000) {
-      return `${ms}ms`;
-    }
-    const seconds = ms / 1000;
-    if (seconds < 60) {
-      return `${seconds.toFixed(1)}s`;
-    }
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}m ${remainingSeconds}s`;
-  };
 
   for (const modelSummary of summary.models) {
     // Create one row per config (caseResult)
@@ -475,7 +479,7 @@ async function main() {
   // Print markdown table
   console.log(
     markdownTable(tableData, {
-      align: ['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'r', 'l'],
+      align: ['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'r', 'r', 'l'],
     })
   );
   console.log('');

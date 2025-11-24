@@ -68,6 +68,7 @@ describe('calculateTestBasedScore', () => {
         successfulCases: 1,
         score: Math.log(2 / 1), // log(2) ≈ 0.693
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
 
@@ -93,6 +94,7 @@ describe('calculateTestBasedScore', () => {
         successfulCases: 1,
         score: 0, // Easy test, weight is 0
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
   });
@@ -120,6 +122,7 @@ describe('calculateTestBasedScore', () => {
         successfulCases: 0,
         score: 0,
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
 
@@ -134,6 +137,7 @@ describe('calculateTestBasedScore', () => {
         successfulCases: 0,
         score: 0,
         averageTime: 0,
+        averageLlmCalls: 0,
       });
     });
   });
@@ -162,6 +166,7 @@ describe('calculateTestBasedScore', () => {
         successfulCases: 1,
         score: Math.log(2 / 1), // log(2) ≈ 0.693
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
   });

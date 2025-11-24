@@ -17,6 +17,20 @@ export function calculateAverageTime(results: CaseResult[]): number {
 }
 
 /**
+ * Calculate average LLM calls from a list of case results.
+ */
+export function calculateAverageLlmCalls(results: CaseResult[]): number {
+  if (results.length === 0) {
+    return 0;
+  }
+  const totalCalls = results.reduce(
+    (sum, result) => sum + result.llmCalls,
+    0
+  );
+  return Math.round((totalCalls / results.length) * 100) / 100; // Round to 2 decimal places
+}
+
+/**
  * Calculate total number of unique models from all results.
  */
 export function calculateTotalModels(allResults: CaseResult[]): number {

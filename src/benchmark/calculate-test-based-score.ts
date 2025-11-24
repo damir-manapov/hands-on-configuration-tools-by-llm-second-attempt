@@ -1,6 +1,7 @@
 import type { CaseResult, ModelScore } from './types.js';
 import {
   calculateAverageTime,
+  calculateAverageLlmCalls,
   calculateTotalModels,
   calculateWeight,
 } from './utils.js';
@@ -92,6 +93,8 @@ export function calculateTestBasedScore(
 
   // Calculate average time
   const averageTime = calculateAverageTime(modelModeResults);
+  // Calculate average LLM calls
+  const averageLlmCalls = calculateAverageLlmCalls(modelModeResults);
 
   return {
     model,
@@ -99,5 +102,6 @@ export function calculateTestBasedScore(
     successfulCases,
     score, // Higher is better (positive for hard tests passed)
     averageTime,
+    averageLlmCalls,
   };
 }

@@ -70,6 +70,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 2,
         score: Math.log(2 / 1) + Math.log(2 / 1), // Both cases passed
         averageTime: 1500, // (1000 + 2000) / 2
+        averageLlmCalls: 1, // (1 + 1) / 2 = 1
       });
     });
 
@@ -102,6 +103,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 0,
         score: 0, // Case failed because not all tests passed
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
 
@@ -127,6 +129,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 1,
         score: 0, // Easy case, weight is 0
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
   });
@@ -154,6 +157,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 0,
         score: 0,
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
 
@@ -168,6 +172,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 0,
         score: 0,
         averageTime: 0,
+        averageLlmCalls: 0,
       });
     });
   });
@@ -196,6 +201,7 @@ describe('calculateCaseBasedScore', () => {
         successfulCases: 1,
         score: Math.log(2 / 1), // log(2) ≈ 0.693
         averageTime: 1000,
+        averageLlmCalls: 1,
       });
     });
   });

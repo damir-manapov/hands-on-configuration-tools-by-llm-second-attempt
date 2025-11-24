@@ -23,10 +23,7 @@ export function calculateAverageLlmCalls(results: CaseResult[]): number {
   if (results.length === 0) {
     return 0;
   }
-  const totalCalls = results.reduce(
-    (sum, result) => sum + result.llmCalls,
-    0
-  );
+  const totalCalls = results.reduce((sum, result) => sum + result.llmCalls, 0);
   return Math.round((totalCalls / results.length) * 100) / 100; // Round to 2 decimal places
 }
 

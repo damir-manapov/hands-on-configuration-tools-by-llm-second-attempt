@@ -358,7 +358,7 @@ async function main() {
   // Helper function to extract model name (without provider prefix)
   const getModelName = (fullModelId: string): string => {
     const parts = fullModelId.split('/');
-    return parts[parts.length - 1] || fullModelId;
+    return parts[parts.length - 1] ?? fullModelId;
   };
 
   // Helper function to remove vowels from a string (for abbreviations)
@@ -514,7 +514,7 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
   // Helper function to extract model name (without provider prefix)
   const getModelName = (fullModelId: string): string => {
     const parts = fullModelId.split('/');
-    return parts[parts.length - 1] || fullModelId;
+    return parts[parts.length - 1] ?? fullModelId;
   };
 
   const timestamp = new Date().toISOString();

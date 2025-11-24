@@ -30,6 +30,26 @@ async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
 
+  // Parse max-retries argument
+  const maxRetriesArg = args.find((arg) => arg.startsWith('--max-retries='));
+  let maxRetries = 3; // Default: 3 retries
+  if (maxRetriesArg) {
+    const retriesValue = maxRetriesArg.split('=')[1];
+    if (!retriesValue) {
+      console.error('--max-retries= requires a value');
+      process.exit(1);
+    }
+    const parsed = parseInt(retriesValue, 10);
+    if (!isNaN(parsed) && parsed >= 0) {
+      maxRetries = parsed;
+    } else {
+      console.error(
+        `Invalid max-retries value: ${retriesValue}. Must be a non-negative integer.`
+      );
+      process.exit(1);
+    }
+  }
+
   // Parse scoring method argument - default to 'tests'
   const scoringMethodArg = args.find((arg) => arg.startsWith('--scoring='));
   let scoringMethod: ScoringMethod = 'tests';
@@ -252,6 +272,7 @@ async function main() {
                 model,
                 mode,
                 verbose,
+                maxRetries,
               },
               generateConfigSchema,
               checkObjectAgainstSchema
@@ -284,6 +305,7 @@ async function main() {
                 error: error instanceof Error ? error.message : String(error),
                 testResults: [],
                 duration: 0,
+                llmCalls: 0,
               };
             })
         );
@@ -433,6 +455,7 @@ async function main() {
       // or calculate a simple pass/fail score
       const scoreStr = allPassed ? '1.000' : '0.000';
       const avgTimeStr = formatTime(caseResult.duration);
+      const llmCallsStr = String(caseResult.llmCalls);
 
       tableData.push([
         modelSummary.model,
@@ -441,6 +464,7 @@ async function main() {
         caseResult.configName,
         casesStr,
         testsStr,
+        llmCallsStr,
         scoreStr,
         avgTimeStr,
         status,
@@ -451,7 +475,7 @@ async function main() {
   // Print markdown table
   console.log(
     markdownTable(tableData, {
-      align: ['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'l'],
+      align: ['l', 'l', 'l', 'l', 'r', 'r', 'r', 'r', 'r', 'l'],
     })
   );
   console.log('');

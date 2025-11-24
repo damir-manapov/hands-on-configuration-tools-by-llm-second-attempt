@@ -33,6 +33,7 @@ describe('sortModels', () => {
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -45,6 +46,7 @@ describe('sortModels', () => {
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -57,6 +59,7 @@ describe('sortModels', () => {
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -81,6 +84,7 @@ describe('sortModels', () => {
           duration: 1000,
           error: 'Some error',
           testResults: [],
+          llmCalls: 0,
         },
       ]),
       createModelSummary('model2', 0, 2000, [
@@ -90,6 +94,7 @@ describe('sortModels', () => {
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -102,6 +107,7 @@ describe('sortModels', () => {
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -123,6 +129,7 @@ describe('sortModels', () => {
           model: 'model1',
           mode: 'toolBased',
           duration: 2000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -135,6 +142,7 @@ describe('sortModels', () => {
           model: 'model2',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -147,6 +155,7 @@ describe('sortModels', () => {
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -169,6 +178,7 @@ describe('sortModels', () => {
           model: 'model1',
           mode: 'toolBased',
           duration: 2000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -182,6 +192,7 @@ describe('sortModels', () => {
           model: 'model2',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -195,6 +206,7 @@ describe('sortModels', () => {
           model: 'model3',
           mode: 'toolBased',
           duration: 1500,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -208,6 +220,7 @@ describe('sortModels', () => {
           model: 'model4',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -239,6 +252,7 @@ describe('sortModels', () => {
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: false, expected: true, passedAsExpected: false },
           ],
@@ -251,6 +265,7 @@ describe('sortModels', () => {
           model: 'model2',
           mode: 'toolBased',
           duration: 2000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],
@@ -283,6 +298,7 @@ describe('sortModels', () => {
           model: 'model1',
           mode: 'toolBased',
           duration: 1000,
+          llmCalls: 1,
           testResults: [
             { passed: true, expected: true, passedAsExpected: true },
           ],

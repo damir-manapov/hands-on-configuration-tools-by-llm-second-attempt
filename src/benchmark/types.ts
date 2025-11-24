@@ -41,6 +41,7 @@ export interface CaseResult {
   error?: string;
   testResults: TestResult[];
   duration: number; // Duration in milliseconds
+  llmCalls: number; // Number of LLM calls made (schema generation attempts)
 }
 
 export interface ModelScore {

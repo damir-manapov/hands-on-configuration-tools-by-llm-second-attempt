@@ -13,7 +13,8 @@ function createCaseResult(
     passedAsExpected: boolean;
   }[],
   error?: string,
-  configName = 'testConfig'
+  configName = 'testConfig',
+  llmCalls = 1
 ): CaseResult {
   return {
     caseName,
@@ -22,6 +23,7 @@ function createCaseResult(
     mode: 'toolBased',
     duration,
     testResults,
+    llmCalls,
     ...(error ? { error } : {}),
   };
 }

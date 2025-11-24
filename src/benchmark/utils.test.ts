@@ -15,6 +15,7 @@ describe('isCaseSuccessful', () => {
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
+      llmCalls: 1,
       testResults: [
         { passed: true, expected: true, passedAsExpected: true },
         { passed: true, expected: true, passedAsExpected: true },
@@ -31,6 +32,7 @@ describe('isCaseSuccessful', () => {
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
+      llmCalls: 1,
       error: 'Some error',
       testResults: [],
     };
@@ -45,6 +47,7 @@ describe('isCaseSuccessful', () => {
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
+      llmCalls: 1,
       testResults: [
         { passed: true, expected: true, passedAsExpected: true },
         { passed: false, expected: true, passedAsExpected: false },
@@ -61,6 +64,7 @@ describe('isCaseSuccessful', () => {
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
+      llmCalls: 1,
       testResults: [{ passed: false, expected: true, passedAsExpected: false }],
     };
 
@@ -74,6 +78,7 @@ describe('isCaseSuccessful', () => {
       model: 'model1',
       mode: 'toolBased',
       duration: 1000,
+      llmCalls: 1,
       testResults: [],
     };
 
@@ -90,6 +95,7 @@ describe('calculateAverageTime', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [],
       },
       {
@@ -98,6 +104,7 @@ describe('calculateAverageTime', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [],
       },
       {
@@ -106,6 +113,7 @@ describe('calculateAverageTime', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 3000,
+        llmCalls: 1,
         testResults: [],
       },
     ];
@@ -125,6 +133,7 @@ describe('calculateAverageTime', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1500,
+        llmCalls: 1,
         testResults: [],
       },
     ];
@@ -140,6 +149,7 @@ describe('calculateAverageTime', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 0,
+        llmCalls: 1,
         testResults: [],
       },
     ];
@@ -157,6 +167,7 @@ describe('calculateTotalModels', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [],
       },
       {
@@ -165,6 +176,7 @@ describe('calculateTotalModels', () => {
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [],
       },
       {
@@ -173,6 +185,7 @@ describe('calculateTotalModels', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
+        llmCalls: 1,
         testResults: [],
       },
     ];
@@ -192,6 +205,7 @@ describe('calculateTotalModels', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [],
       },
     ];
@@ -207,6 +221,7 @@ describe('calculateTotalModels', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [],
       },
       {
@@ -215,6 +230,7 @@ describe('calculateTotalModels', () => {
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [],
       },
     ];

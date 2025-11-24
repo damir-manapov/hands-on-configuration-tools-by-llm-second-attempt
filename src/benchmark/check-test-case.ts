@@ -20,6 +20,7 @@ export interface CheckModelOptions {
   model: string;
   mode: Mode;
   verbose: boolean;
+  maxRetries?: number; // Max retries if generated schema fails test checks
 }
 
 export interface DebugInfo {
@@ -39,10 +40,11 @@ export async function checkModelForTestCase(
   generateSchema: (options: GenerateSchemaOptions) => Promise<ConfigSchema>,
   checkObject: (options: CheckObjectOptions) => boolean
 ): Promise<CaseResult & { debugInfo?: DebugInfo }> {
-  const { testCase, config, model, mode, verbose } = options;
+  const { testCase, config, model, mode, verbose, maxRetries = 3 } = options;
   const caseResults: TestResult[] = [];
   let caseError: string | undefined;
   let generatedSchema: ConfigSchema | undefined;
+  let llmCalls = 0; // Track number of LLM calls (schema generation attempts)
   const startTime = Date.now();
   const caseName = `${testCase.name} - ${config.name}`; // For backward compatibility in verbose output
 
@@ -55,58 +57,103 @@ export async function checkModelForTestCase(
   }
 
   try {
-    // Generate schema ONCE for this config (shared by all test data items)
-    if (verbose) {
-      console.log('\n--- Generating Schema ---');
-    }
-    const schema = await generateSchema({
-      checkDescription: config.checkDescription,
-      objectJsonSchema: testCase.objectJsonSchema,
-      verbose,
-      mode,
-      model,
-    });
-    generatedSchema = schema;
+    let schema: ConfigSchema | undefined;
+    let feedback: string | undefined;
+    const totalRetries = maxRetries + 1; // Initial attempt + retries
 
-    if (verbose) {
-      console.log('Generated config:');
-      console.log(JSON.stringify(schema, null, 2));
-      console.log('');
-    }
-
-    // Run all test data items against the same schema
-    for (let i = 0; i < config.testData.length; i++) {
-      const testItem = config.testData[i];
-      if (!testItem) {
-        continue;
-      }
-      if (verbose) {
-        console.log(`\n--- Test Data ${i + 1}/${config.testData.length} ---`);
+    // Retry loop: generate schema and test, retry if tests fail
+    for (let attempt = 1; attempt <= totalRetries; attempt++) {
+      if (attempt > 1) {
+        if (verbose) {
+          console.log(
+            `\n--- Retry Attempt ${attempt - 1}/${maxRetries} (fixing schema based on test failures) ---`
+          );
+        }
+      } else {
+        if (verbose) {
+          console.log('\n--- Generating Schema ---');
+        }
       }
 
-      const objectJson = JSON.stringify(testItem.data, null, 2);
-
-      const result = checkObject({
-        schema,
-        objectJson,
+      // Generate schema with feedback from previous attempts
+      let checkDescriptionWithFeedback = config.checkDescription;
+      if (feedback) {
+        checkDescriptionWithFeedback = `${config.checkDescription}\n\nIMPORTANT: Previous attempt failed validation. Please fix the schema:\n\n${feedback}`;
+      }
+      schema = await generateSchema({
+        checkDescription: checkDescriptionWithFeedback,
+        objectJsonSchema: testCase.objectJsonSchema,
         verbose,
+        mode,
+        model,
       });
+      llmCalls++; // Count each schema generation as an LLM call
+      generatedSchema = schema;
 
-      const passed = result === testItem.expectedResult;
-      if (!passed) {
-        console.error(
-          `\n✗ Mismatch [Case: ${caseName}, Model: ${model}, Mode: ${mode}]: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
-        );
-      } else if (verbose) {
-        console.log(
-          `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
-        );
+      if (verbose) {
+        console.log('Generated config:');
+        console.log(JSON.stringify(schema, null, 2));
+        console.log('');
       }
-      caseResults.push({
-        passed,
-        expected: testItem.expectedResult,
-        passedAsExpected: result,
-      });
+
+      // Reset results for this attempt
+      caseResults.length = 0;
+      feedback = undefined;
+
+      // Run all test data items against the same schema
+      const failures: string[] = [];
+      for (let i = 0; i < config.testData.length; i++) {
+        const testItem = config.testData[i];
+        if (!testItem) {
+          continue;
+        }
+        if (verbose) {
+          console.log(`\n--- Test Data ${i + 1}/${config.testData.length} ---`);
+        }
+
+        const objectJson = JSON.stringify(testItem.data, null, 2);
+
+        const result = checkObject({
+          schema,
+          objectJson,
+          verbose,
+        });
+
+        const passed = result === testItem.expectedResult;
+        if (!passed) {
+          const expectedStr = testItem.expectedResult ? 'PASS' : 'FAIL';
+          const actualStr = result ? 'PASS' : 'FAIL';
+          const errorMsg = `Test ${i + 1}: Expected ${expectedStr}, got ${actualStr}. Data: ${objectJson}`;
+          failures.push(errorMsg);
+          console.error(
+            `\n✗ Mismatch [Case: ${caseName}, Model: ${model}, Mode: ${mode}]: Expected ${expectedStr}, got ${actualStr}`
+          );
+        } else if (verbose) {
+          console.log(
+            `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
+          );
+        }
+        caseResults.push({
+          passed,
+          expected: testItem.expectedResult,
+          passedAsExpected: result,
+        });
+      }
+
+      // If all tests passed, we're done
+      if (failures.length === 0) {
+        break;
+      }
+
+      // If we have failures and more retries available, prepare feedback
+      if (attempt < totalRetries) {
+        feedback = `The generated schema failed ${failures.length} out of ${config.testData.length} test cases:\n\n${failures.join('\n')}\n\nPlease fix the schema to correctly validate these test cases.`;
+        if (verbose) {
+          console.log(
+            `\n✗ Schema failed ${failures.length}/${config.testData.length} tests. Retrying with feedback...`
+          );
+        }
+      }
     }
   } catch (error) {
     // Unexpected error that prevented tests from running
@@ -137,6 +184,7 @@ export async function checkModelForTestCase(
     ...(caseError ? { error: caseError } : {}),
     testResults: caseResults,
     duration,
+    llmCalls,
   };
 
   // Include debug info only if there are test failures (tests ran but didn't pass)

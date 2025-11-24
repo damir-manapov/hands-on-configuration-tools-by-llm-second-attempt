@@ -231,9 +231,10 @@ With `--verbose` flag, it also shows:
    - **Prompt-based (`--mode=promptBased`)**: Uses direct JSON generation via prompts with retry logic
    - **Performance**: This optimization reduces LLM API calls significantly. For example, a test case with 5 test data items across 10 models makes 10 API calls instead of 50 (80% reduction)
 8. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
-9. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
-10. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
-11. **Summary**: A comprehensive summary table shows how each model performed
+9. **Test Validation Retries**: After schema validation passes, the generated schema is tested against all test data items. If any tests fail, the LLM retries schema generation with detailed feedback about which tests failed and why (up to 3 retries by default). This helps the LLM fix schemas that are syntactically valid but logically incorrect.
+10. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
+11. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
+12. **Summary**: A comprehensive summary table shows how each model performed
 
 The scripts use the `ConfigChecker` class from `src/config-checker.ts` which supports various validation rules like required fields, type checking, min/max constraints, and custom validators.
 

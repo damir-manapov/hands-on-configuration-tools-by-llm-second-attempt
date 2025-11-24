@@ -11,6 +11,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -19,6 +20,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
@@ -61,6 +63,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -69,6 +72,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -77,6 +81,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -85,6 +90,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 2500,
+        llmCalls: 1,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -123,6 +129,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -131,6 +138,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'promptBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],
@@ -161,6 +169,7 @@ describe('generateSummary', () => {
         model: 'model3',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -169,6 +178,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -177,6 +187,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
     ];
@@ -200,6 +211,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 1000,
+        llmCalls: 1,
         testResults: [
           { passed: true, expected: true, passedAsExpected: true },
           { passed: true, expected: true, passedAsExpected: true },
@@ -211,6 +223,7 @@ describe('generateSummary', () => {
         model: 'model1',
         mode: 'toolBased',
         duration: 2000,
+        llmCalls: 1,
         testResults: [{ passed: true, expected: true, passedAsExpected: true }],
       },
       {
@@ -219,6 +232,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 1500,
+        llmCalls: 1,
         testResults: [
           { passed: true, expected: true, passedAsExpected: true },
           { passed: false, expected: true, passedAsExpected: false },
@@ -230,6 +244,7 @@ describe('generateSummary', () => {
         model: 'model2',
         mode: 'toolBased',
         duration: 2500,
+        llmCalls: 1,
         testResults: [
           { passed: false, expected: true, passedAsExpected: false },
         ],

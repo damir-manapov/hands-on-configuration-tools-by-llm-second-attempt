@@ -9,8 +9,9 @@ export async function generateConfigFromLLM(
   checkDescription: string,
   objectJsonSchema: unknown,
   maxRetries = 3,
-  verbose = false
-): Promise<ConfigSchema> {
+  verbose = false,
+  previousMessages?: unknown[]
+): Promise<{ schema: ConfigSchema; messages: unknown[] }> {
   const systemMessage = `You are a configuration schema generator. Generate a ConfigSchema for the ConfigChecker tool based on a description of the target object.
 
 CRITICAL: Return ONLY valid JSON. No functions, no code, no markdown code blocks, no explanations.
@@ -41,13 +42,26 @@ ConfigSchema:
   "email": {"type": "string"}
 }`;
 
-  const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`;
-
-  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] =
-    [
+  // If we have previous messages, continue the conversation
+  // Otherwise, start a new conversation
+  let messages: { role: 'system' | 'user' | 'assistant'; content: string }[];
+  if (previousMessages && previousMessages.length > 0) {
+    // Continue existing conversation - use previous messages as-is
+    messages = previousMessages as {
+      role: 'system' | 'user' | 'assistant';
+      content: string;
+    }[];
+    // Add new user message with feedback
+    const userContent = checkDescription; // checkDescription already contains feedback if this is a retry
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    // Start new conversation
+    const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nGenerate ONLY the ConfigSchema JSON, nothing else:`;
+    messages = [
       { role: 'system', content: systemMessage },
       { role: 'user', content: userContent },
     ];
+  }
 
   let lastError: string | undefined;
   let lastResponse: string | undefined;
@@ -87,7 +101,12 @@ ConfigSchema:
         if (verbose) {
           console.log('\n✓ Schema validation passed!');
         }
-        return schema;
+        // Add assistant response to messages before returning
+        const finalMessages = [
+          ...messages,
+          { role: 'assistant', content: response },
+        ];
+        return { schema, messages: finalMessages as unknown[] };
       }
 
       lastError = validation.error;
@@ -126,6 +145,12 @@ ConfigSchema:
         continue;
       }
     }
+  }
+
+  // If we get here, all retries failed
+  // Add the last assistant response to messages before throwing
+  if (lastResponse) {
+    messages.push({ role: 'assistant', content: lastResponse });
   }
 
   throw new SchemaGenerationError(

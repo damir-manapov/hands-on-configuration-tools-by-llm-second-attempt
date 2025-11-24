@@ -16,13 +16,19 @@ import type { ConfigSchema } from '../core/config-checker.js';
 
 describe('checkModelForTestCase', () => {
   let mockGenerateSchema: MockedFunction<
-    (options: GenerateSchemaOptions) => Promise<ConfigSchema>
+    (
+      options: GenerateSchemaOptions
+    ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>
   >;
   let mockCheckObject: MockedFunction<(options: CheckObjectOptions) => boolean>;
 
   beforeEach(() => {
     mockGenerateSchema =
-      vi.fn<(options: GenerateSchemaOptions) => Promise<ConfigSchema>>();
+      vi.fn<
+        (
+          options: GenerateSchemaOptions
+        ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>
+      >();
     mockCheckObject = vi.fn<(options: CheckObjectOptions) => boolean>();
   });
 
@@ -54,7 +60,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -101,7 +110,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -129,7 +141,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(false);
 
     const result = await checkModelForTestCase(
@@ -157,7 +172,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -181,7 +199,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -233,7 +254,10 @@ describe('checkModelForTestCase', () => {
     const testCase = createTestCase([]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -263,7 +287,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -291,7 +318,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     const result = await checkModelForTestCase(
@@ -323,7 +353,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValue(true);
 
     await checkModelForTestCase(
@@ -360,7 +393,10 @@ describe('checkModelForTestCase', () => {
     ]);
 
     const mockSchema: ConfigSchema = { name: { type: 'required' } };
-    mockGenerateSchema.mockResolvedValue(mockSchema);
+    mockGenerateSchema.mockResolvedValue({
+      schema: mockSchema,
+      messages: [],
+    });
     mockCheckObject.mockReturnValueOnce(true).mockReturnValueOnce(false);
 
     const result = await checkModelForTestCase(
@@ -420,8 +456,8 @@ describe('checkModelForTestCase', () => {
       // First attempt: schema fails (returns false for both)
       // Second attempt: schema passes (returns true for both)
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       mockCheckObject
         .mockReturnValueOnce(false) // First test fails
         .mockReturnValueOnce(false) // Second test fails
@@ -461,8 +497,8 @@ describe('checkModelForTestCase', () => {
       const secondSchema: ConfigSchema = { name: { type: 'required' } };
 
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       mockCheckObject.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
       await checkModelForTestCase(
@@ -489,6 +525,78 @@ describe('checkModelForTestCase', () => {
       );
     });
 
+    it('should pass previousMessages when retrying to continue conversation', async () => {
+      const testCase = createTestCase([
+        { data: { name: 'John' }, expectedResult: true },
+      ]);
+
+      const firstSchema: ConfigSchema = { name: { type: 'number' } };
+      const secondSchema: ConfigSchema = { name: { type: 'required' } };
+
+      const firstMessages = [
+        { role: 'system', content: 'System message' },
+        { role: 'user', content: 'First user message' },
+        { role: 'assistant', content: 'First assistant response' },
+      ];
+      // When continuing conversation, generator receives previousMessages and returns full conversation
+      const secondMessages = [
+        ...firstMessages,
+        { role: 'user', content: 'Retry user message' },
+        { role: 'assistant', content: 'Second assistant response' },
+      ];
+
+      mockGenerateSchema
+        .mockResolvedValueOnce({
+          schema: firstSchema,
+          messages: firstMessages,
+        })
+        .mockResolvedValueOnce({
+          schema: secondSchema,
+          messages: secondMessages,
+        });
+      mockCheckObject.mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+      await checkModelForTestCase(
+        {
+          testCase,
+          config: testCase.configs[0]!,
+          model: 'model1',
+          mode: 'toolBased',
+          verbose: false,
+          maxRetries: 3,
+        },
+        mockGenerateSchema,
+        mockCheckObject
+      );
+
+      // Check that first call doesn't have previousMessages (new conversation)
+      expect(mockGenerateSchema.mock.calls[0]).toBeDefined();
+      expect(
+        mockGenerateSchema.mock.calls[0]![0].previousMessages
+      ).toBeUndefined();
+
+      // Check that second call has previousMessages (continuing conversation)
+      expect(mockGenerateSchema.mock.calls[1]).toBeDefined();
+      const secondCallPreviousMessages =
+        mockGenerateSchema.mock.calls[1]![0].previousMessages;
+      expect(secondCallPreviousMessages).toBeDefined();
+      // Verify that previousMessages is an array with messages from first attempt
+      // Note: Since arrays are passed by reference and later mutated, we verify
+      // that previousMessages was passed (not undefined) and is an array
+      if (secondCallPreviousMessages) {
+        expect(Array.isArray(secondCallPreviousMessages)).toBe(true);
+        // The length should match firstMessages at the time of the call
+        // (even if the array was later mutated, the mock captured it at call time)
+        expect(secondCallPreviousMessages.length).toBeGreaterThanOrEqual(
+          firstMessages.length
+        );
+      }
+
+      // Verify that messages are collected correctly
+      // The second call should return the full conversation (firstMessages + new messages)
+      expect(mockGenerateSchema).toHaveBeenCalledTimes(2);
+    });
+
     it('should stop retrying after maxRetries', async () => {
       const testCase = createTestCase([
         { data: { name: 'John' }, expectedResult: true },
@@ -498,7 +606,10 @@ describe('checkModelForTestCase', () => {
       const failingSchema: ConfigSchema = {};
 
       // Always return failing schema
-      mockGenerateSchema.mockResolvedValue(failingSchema);
+      mockGenerateSchema.mockResolvedValue({
+        schema: failingSchema,
+        messages: [],
+      });
       // Always fail validation
       mockCheckObject.mockReturnValue(false);
 
@@ -532,7 +643,10 @@ describe('checkModelForTestCase', () => {
       // Schema that will always fail (wrong type)
       const failingSchema: ConfigSchema = { name: { type: 'number' } };
 
-      mockGenerateSchema.mockResolvedValue(failingSchema);
+      mockGenerateSchema.mockResolvedValue({
+        schema: failingSchema,
+        messages: [],
+      });
       mockCheckObject.mockReturnValue(false);
 
       const result = await checkModelForTestCase(
@@ -565,8 +679,8 @@ describe('checkModelForTestCase', () => {
       const secondSchema: ConfigSchema = { name: { type: 'required' } };
 
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       mockCheckObject
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(false)
@@ -605,8 +719,8 @@ describe('checkModelForTestCase', () => {
       const secondSchema: ConfigSchema = { name: { type: 'required' } };
 
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       mockCheckObject
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(false)
@@ -645,8 +759,8 @@ describe('checkModelForTestCase', () => {
       const secondSchema: ConfigSchema = { name: { type: 'required' } };
 
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       // First attempt: all fail (missing name)
       // Second attempt: all pass
       mockCheckObject
@@ -686,7 +800,10 @@ describe('checkModelForTestCase', () => {
       ]);
 
       const mockSchema: ConfigSchema = { name: { type: 'required' } };
-      mockGenerateSchema.mockResolvedValue(mockSchema);
+      mockGenerateSchema.mockResolvedValue({
+        schema: mockSchema,
+        messages: [],
+      });
       mockCheckObject.mockReturnValue(false); // Test fails
 
       const result = await checkModelForTestCase(
@@ -723,7 +840,10 @@ describe('checkModelForTestCase', () => {
       ]);
 
       const mockSchema: ConfigSchema = { name: { type: 'required' } };
-      mockGenerateSchema.mockResolvedValue(mockSchema);
+      mockGenerateSchema.mockResolvedValue({
+        schema: mockSchema,
+        messages: [],
+      });
       mockCheckObject.mockReturnValue(true); // Test passes
 
       const result = await checkModelForTestCase(
@@ -775,8 +895,8 @@ describe('checkModelForTestCase', () => {
       const secondSchema: ConfigSchema = { name: { type: 'required' } };
 
       mockGenerateSchema
-        .mockResolvedValueOnce(firstSchema)
-        .mockResolvedValueOnce(secondSchema);
+        .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
+        .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
       mockCheckObject
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(false)
@@ -806,7 +926,10 @@ describe('checkModelForTestCase', () => {
       ]);
 
       const failingSchema: ConfigSchema = {};
-      mockGenerateSchema.mockResolvedValue(failingSchema);
+      mockGenerateSchema.mockResolvedValue({
+        schema: failingSchema,
+        messages: [],
+      });
       mockCheckObject.mockReturnValue(false);
 
       const result = await checkModelForTestCase(

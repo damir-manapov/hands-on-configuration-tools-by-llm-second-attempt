@@ -100,8 +100,9 @@ export async function generateConfigFromLLMWithTools(
   checkDescription: string,
   objectJsonSchema: unknown,
   maxRetries = 3,
-  verbose = false
-): Promise<ConfigSchema> {
+  verbose = false,
+  previousMessages?: unknown[]
+): Promise<{ schema: ConfigSchema; messages: unknown[] }> {
   const systemMessage = `You are a configuration schema generator. Generate a ConfigSchema for the ConfigChecker tool based on a description of the target object.
 
 Use the generate_schema tool function to provide the complete configuration schema in a single call.
@@ -112,8 +113,6 @@ Important rules:
 - Optional fields get their type rule (string, number, boolean, array, object, oneOf) with optional constraints
 - Extract constraints from the description (minLength, maxLength, min, max, minItems, maxItems, enum values)
 - The schema should be a JSON object where each field name maps to its rule object`;
-
-  const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nCall generate_schema with the complete schema.`;
 
   interface ToolCallMessage {
     role: 'assistant';
@@ -136,10 +135,23 @@ Important rules:
     | ToolCallMessage
     | ToolResultMessage;
 
-  const messages: Message[] = [
-    { role: 'system', content: systemMessage },
-    { role: 'user', content: userContent },
-  ];
+  // If we have previous messages, continue the conversation
+  // Otherwise, start a new conversation
+  let messages: Message[];
+  if (previousMessages && previousMessages.length > 0) {
+    // Continue existing conversation - use previous messages as-is
+    messages = previousMessages as Message[];
+    // Add new user message with feedback
+    const userContent = checkDescription; // checkDescription already contains feedback if this is a retry
+    messages.push({ role: 'user', content: userContent });
+  } else {
+    // Start new conversation
+    const userContent = `Generate a ConfigSchema based on this description:\n\n${checkDescription}\n\nReference JSON Schema (structure, types, and required fields only - no constraints):\n${JSON.stringify(objectJsonSchema, null, 2)}\n\nCall generate_schema with the complete schema.`;
+    messages = [
+      { role: 'system', content: systemMessage },
+      { role: 'user', content: userContent },
+    ];
+  }
 
   const schema: ConfigSchema = {};
   let lastError: string | undefined;
@@ -170,6 +182,7 @@ Important rules:
     if (response.type === 'tool_calls') {
       // Process tool calls
       const toolResults: { id: string; content: string }[] = [];
+      let schemaValidated = false; // Track if schema was successfully validated
 
       for (const toolCall of response.toolCalls) {
         try {
@@ -211,17 +224,21 @@ Important rules:
                   message: 'Schema generated and validated successfully',
                 }),
               });
-              return schema;
+              // Clear lastError since validation succeeded
+              lastError = undefined;
+              schemaValidated = true;
+              // Don't return yet - need to add assistant message and tool results first
+              // We'll return after adding messages below
+            } else {
+              lastError = validation.error;
+              toolResults.push({
+                id: toolCall.id,
+                content: JSON.stringify({
+                  success: false,
+                  error: `Schema validation failed: ${validation.error}`,
+                }),
+              });
             }
-
-            lastError = validation.error;
-            toolResults.push({
-              id: toolCall.id,
-              content: JSON.stringify({
-                success: false,
-                error: `Schema validation failed: ${validation.error}`,
-              }),
-            });
           } else {
             toolResults.push({
               id: toolCall.id,
@@ -270,10 +287,17 @@ Important rules:
         console.log('\nCurrent schema:', JSON.stringify(schema, null, 2));
       }
 
-      // If generate_schema was called but validation failed, continue to retry
+      // Check if schema was successfully generated and validated
       const schemaGenerated = response.toolCalls.some(
         (tc) => tc.name === 'generate_schema'
       );
+
+      // If schema is valid, return with all messages (including assistant and tool messages)
+      if (schemaValidated && schemaGenerated) {
+        return { schema, messages: [...messages] as unknown[] };
+      }
+
+      // If generate_schema was called but validation failed, continue to retry
       if (schemaGenerated && lastError) {
         if (attempt < maxRetries) {
           if (verbose) {

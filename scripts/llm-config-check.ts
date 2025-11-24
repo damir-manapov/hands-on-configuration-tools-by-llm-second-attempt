@@ -533,9 +533,76 @@ function writeDebugFile(debugInfos: DebugInfo[]): void {
     content += `## Failure ${i + 1}: ${debug.caseName}\n\n`;
     content += `**Model:** \`${getModelName(debug.model)}\`  \n`;
     content += `**Mode:** \`${debug.mode}\`  \n`;
-    content += `**Case:** \`${debug.caseName}\`  \n\n`;
+    content += `**Case:** \`${debug.caseName}\`  \n`;
+    content += `**LLM Calls:** ${debug.llmCalls}  \n\n`;
 
     content += `### Check Description\n\n${debug.checkDescription}\n\n`;
+
+    // Add full conversation with LLM
+    if (debug.messages && debug.messages.length > 0) {
+      content += `### Full LLM Conversation\n\n`;
+
+      for (let msgIdx = 0; msgIdx < debug.messages.length; msgIdx++) {
+        const msg = debug.messages[msgIdx];
+        if (!msg) {
+          continue;
+        }
+
+        // Handle different message formats
+        let role = 'unknown';
+        let contentStr = '';
+        let toolCalls: unknown = undefined;
+
+        if (typeof msg === 'object' && msg !== null) {
+          const msgObj = msg as Record<string, unknown>;
+          if ('role' in msgObj) {
+            role = String(msgObj.role);
+          }
+          if ('content' in msgObj) {
+            const content = msgObj.content;
+            if (typeof content === 'string') {
+              contentStr = content;
+            } else if (content !== null && content !== undefined) {
+              contentStr = JSON.stringify(content);
+            }
+          }
+          if ('tool_calls' in msgObj && msgObj.tool_calls) {
+            toolCalls = msgObj.tool_calls;
+          }
+          if ('tool_call_id' in msgObj) {
+            role = 'tool';
+            const content = msgObj.content;
+            if (typeof content === 'string') {
+              contentStr = content;
+            } else if (content !== null && content !== undefined) {
+              contentStr = JSON.stringify(content);
+            }
+          }
+        }
+
+        const roleDisplay = role.toUpperCase();
+        content += `#### Message ${msgIdx + 1}: [${roleDisplay}]\n\n`;
+
+        if (toolCalls) {
+          content += `**Tool Calls:**\n\n\`\`\`json\n${JSON.stringify(toolCalls, null, 2)}\n\`\`\`\n\n`;
+        }
+
+        if (contentStr) {
+          // Try to format as JSON if it looks like JSON, otherwise show as plain text
+          try {
+            const parsed: unknown = JSON.parse(contentStr);
+            const formattedContent = JSON.stringify(parsed, null, 2);
+            content += `\`\`\`json\n${formattedContent}\n\`\`\`\n\n`;
+          } catch {
+            // Not JSON, show as plain text
+            content += `\`\`\`\n${contentStr}\n\`\`\`\n\n`;
+          }
+        } else {
+          content += `*(no content)*\n\n`;
+        }
+      }
+      content += `\n`;
+    }
 
     content += `### Reference Config\n\n\`\`\`json\n${JSON.stringify(debug.referenceConfig, null, 2)}\n\`\`\`\n\n`;
 

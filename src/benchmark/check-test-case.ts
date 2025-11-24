@@ -32,12 +32,16 @@ export interface DebugInfo {
   generatedConfig?: ConfigSchema;
   testData: TestData[];
   testResults: TestResult[];
+  llmCalls: number; // Number of LLM calls made (schema generation attempts)
+  messages: unknown[]; // Full conversation with LLM across all retries
   error?: string;
 }
 
 export async function checkModelForTestCase(
   options: CheckModelOptions,
-  generateSchema: (options: GenerateSchemaOptions) => Promise<ConfigSchema>,
+  generateSchema: (
+    options: GenerateSchemaOptions
+  ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>,
   checkObject: (options: CheckObjectOptions) => boolean
 ): Promise<CaseResult & { debugInfo?: DebugInfo }> {
   const { testCase, config, model, mode, verbose, maxRetries = 3 } = options;
@@ -45,6 +49,7 @@ export async function checkModelForTestCase(
   let caseError: string | undefined;
   let generatedSchema: ConfigSchema | undefined;
   let llmCalls = 0; // Track number of LLM calls (schema generation attempts)
+  const allMessages: unknown[] = []; // Collect all conversation messages across retries
   const startTime = Date.now();
   const caseName = `${testCase.name} - ${config.name}`; // For backward compatibility in verbose output
 
@@ -78,17 +83,35 @@ export async function checkModelForTestCase(
       // Generate schema with feedback from previous attempts
       let checkDescriptionWithFeedback = config.checkDescription;
       if (feedback) {
-        checkDescriptionWithFeedback = `${config.checkDescription}\n\nIMPORTANT: Previous attempt failed validation. Please fix the schema:\n\n${feedback}`;
+        checkDescriptionWithFeedback = `IMPORTANT: Previous attempt failed validation. Please fix the schema:\n\n${feedback}`;
       }
-      schema = await generateSchema({
+
+      // Continue conversation if we have previous messages, otherwise start new
+      const previousMessagesForRetry =
+        attempt > 1 && allMessages.length > 0 ? allMessages : undefined;
+
+      const result = await generateSchema({
         checkDescription: checkDescriptionWithFeedback,
         objectJsonSchema: testCase.objectJsonSchema,
         verbose,
         mode,
         model,
+        previousMessages: previousMessagesForRetry,
       });
+      schema = result.schema;
       llmCalls++; // Count each schema generation as an LLM call
       generatedSchema = schema;
+
+      // Update messages: if we continued conversation, replace allMessages with new result
+      // Otherwise, append new messages
+      if (previousMessagesForRetry) {
+        // Conversation was continued, so result.messages contains the full conversation
+        allMessages.length = 0;
+        allMessages.push(...result.messages);
+      } else {
+        // New conversation, append messages
+        allMessages.push(...result.messages);
+      }
 
       if (verbose) {
         console.log('Generated config:');
@@ -201,6 +224,8 @@ export async function checkModelForTestCase(
       generatedConfig: generatedSchema,
       testData: config.testData,
       testResults: caseResults,
+      llmCalls,
+      messages: allMessages,
     };
   }
 

@@ -14,8 +14,9 @@ export type ConfigGenerator = (
   checkDescription: string,
   objectJsonSchema: unknown,
   maxRetries?: number,
-  verbose?: boolean
-) => Promise<ConfigSchema>;
+  verbose?: boolean,
+  previousMessages?: unknown[] // Optional previous messages to continue conversation
+) => Promise<{ schema: ConfigSchema; messages: unknown[] }>;
 
 /**
  * Registry of config generators for different modes.

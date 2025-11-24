@@ -26,6 +26,7 @@ export interface GenerateSchemaOptions {
   model?: string;
   verbose?: boolean;
   mode?: Mode;
+  previousMessages?: unknown[]; // Optional previous messages to continue conversation
 }
 
 export interface CheckObjectOptions {
@@ -40,7 +41,7 @@ export interface CheckObjectOptions {
  */
 export async function generateConfigSchema(
   options: GenerateSchemaOptions
-): Promise<ConfigSchema> {
+): Promise<{ schema: ConfigSchema; messages: unknown[] }> {
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new MissingApiKeyError(
@@ -65,13 +66,15 @@ export async function generateConfigSchema(
 
   const mode = options.mode ?? 'toolBased';
   const generator = getConfigGenerator(mode);
-  const schema = await generator(
+  const result = await generator(
     client,
     options.checkDescription,
     options.objectJsonSchema,
     3,
-    options.verbose
+    options.verbose,
+    options.previousMessages
   );
+  const schema = result.schema;
 
   if (options.verbose) {
     console.log('Generated config:');
@@ -79,7 +82,7 @@ export async function generateConfigSchema(
     console.log('');
   }
 
-  return schema;
+  return { schema, messages: result.messages };
 }
 
 /**
@@ -118,7 +121,7 @@ export function checkObjectAgainstSchema(options: CheckObjectOptions): boolean {
  * separately when checking multiple objects with the same schema.
  */
 export async function runConfigCheck(options: CheckOptions): Promise<boolean> {
-  const schema = await generateConfigSchema({
+  const { schema } = await generateConfigSchema({
     checkDescription: options.checkDescription,
     objectJsonSchema: options.objectJsonSchema,
     apiKey: options.apiKey,

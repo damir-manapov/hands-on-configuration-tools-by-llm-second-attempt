@@ -187,24 +187,30 @@ The script tests multiple LLM models concurrently and generates:
 1. **Per-Model Results**: For each model, shows:
    - Model name
    - Score (successful cases / total cases, plus logarithmic score)
+   - Average time and average LLM calls per case
    - Per-case results with pass/fail status
    - Individual test results
 
 2. **Final Summary Table**: A markdown table comparing all models with:
-   - Model name
+   - Model name (abbreviated, e.g., "codestral-2501" instead of "mistralai/codestral-2501")
+   - Mode, case, and config names (abbreviated by removing vowels for compact display)
    - Cases passed/total
+   - Tests passed/total
+   - Average LLM calls per case
    - Score (logarithmic)
    - Average time
    - Overall status (PASSED/FAILED/ERROR)
 
 3. **Debug File** (`debug-failures.md`): When tests fail, a debug file is automatically generated (gitignored) containing:
    - Model, mode, and case name for each failure
+   - Number of LLM calls made
+   - Full LLM conversation history (all messages, including system, user, assistant, and tool calls/results)
    - Reference config (expected)
    - Generated config (actual)
    - Test data and results for each test item
    - Error messages (if any)
 
-   This file helps debug why specific checks didn't pass by comparing expected vs actual configurations.
+   This file helps debug why specific checks didn't pass by comparing expected vs actual configurations and reviewing the complete conversation with the LLM.
 
 Models are sorted by:
 
@@ -230,8 +236,8 @@ With `--verbose` flag, it also shows:
    - **Default (`--mode=toolBased`)**: Uses function calling API where the LLM calls specific tool functions to build the schema step-by-step
    - **Prompt-based (`--mode=promptBased`)**: Uses direct JSON generation via prompts with retry logic
    - **Performance**: This optimization reduces LLM API calls significantly. For example, a test case with 5 test data items across 10 models makes 10 API calls instead of 50 (80% reduction)
-8. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts)
-9. **Test Validation Retries**: After schema validation passes, the generated schema is tested against all test data items. If any tests fail, the LLM retries schema generation with detailed feedback about which tests failed and why (up to 3 retries by default). This helps the LLM fix schemas that are syntactically valid but logically incorrect.
+8. **Schema Validation**: The generated schema is validated using Zod, and if invalid, the LLM retries with error feedback (up to 3 attempts). The conversation continues naturally, with the LLM seeing the full conversation history including previous attempts and errors.
+9. **Test Validation Retries**: After schema validation passes, the generated schema is tested against all test data items. If any tests fail, the LLM retries schema generation with detailed feedback about which tests failed and why (up to 3 retries by default). **The conversation continues across retries** - the LLM sees the full conversation history including previous attempts, responses, and feedback. This helps the LLM fix schemas that are syntactically valid but logically incorrect by learning from previous mistakes.
 10. **Object Check**: Each test data item is validated against the same generated schema using `ConfigChecker` (no additional LLM calls)
 11. **Scoring & Ranking**: Models are scored based on successful cases (with logarithmic weighting) and ranked by score, status, and performance
 12. **Summary**: A comprehensive summary table shows how each model performed

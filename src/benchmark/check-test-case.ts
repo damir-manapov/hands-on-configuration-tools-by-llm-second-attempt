@@ -9,6 +9,7 @@ import type {
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,
+  ValidationError,
 } from '../checker/run-config-check.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 import { InvalidModelError, getErrorMessage } from '../core/errors.js';
@@ -42,7 +43,9 @@ export async function checkModelForTestCase(
   generateSchema: (
     options: GenerateSchemaOptions
   ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>,
-  checkObject: (options: CheckObjectOptions) => boolean
+  checkObject: (
+    options: CheckObjectOptions
+  ) => boolean | { valid: boolean; errors: ValidationError[] }
 ): Promise<CaseResult & { debugInfo?: DebugInfo }> {
   const { testCase, config, model, mode, verbose, maxRetries = 3 } = options;
   const caseResults: TestResult[] = [];
@@ -136,30 +139,66 @@ export async function checkModelForTestCase(
 
         const objectJson = JSON.stringify(testItem.data, null, 2);
 
-        const result = checkObject({
+        const checkResult = checkObject({
           schema,
           objectJson,
           verbose,
+          returnDetails: true, // Get detailed error information
         });
 
-        const passed = result === testItem.expectedResult;
+        // Handle both boolean and detailed result
+        const isValid =
+          typeof checkResult === 'boolean' ? checkResult : checkResult.valid;
+        const validationErrors =
+          typeof checkResult === 'boolean' ? [] : checkResult.errors;
+
+        const passed = isValid === testItem.expectedResult;
         if (!passed) {
           const expectedStr = testItem.expectedResult ? 'PASS' : 'FAIL';
-          const actualStr = result ? 'PASS' : 'FAIL';
-          const errorMsg = `Test ${i + 1}: Expected ${expectedStr}, got ${actualStr}. Data: ${objectJson}`;
+          const actualStr = isValid ? 'PASS' : 'FAIL';
+
+          // Build detailed error message with comprehensive failure information
+          let errorMsg = `\n=== Test ${i + 1} Failed ===\n`;
+
+          // Include test description if available
+          if (testItem.description) {
+            errorMsg += `Test Purpose: ${testItem.description}\n`;
+          }
+
+          errorMsg += `Expected Result: ${expectedStr}\n`;
+          errorMsg += `Actual Result: ${actualStr}\n`;
+          errorMsg += `Test Data: ${objectJson}\n`;
+
+          if (!isValid && validationErrors.length > 0) {
+            errorMsg += `\nValidation Errors (what went wrong):\n`;
+            for (const error of validationErrors) {
+              errorMsg += `  - Field "${error.field}": ${error.reason}\n`;
+              errorMsg += `    Actual Value: ${JSON.stringify(error.value)}\n`;
+              errorMsg += `    Schema Rule Applied: ${JSON.stringify(error.rule)}\n`;
+            }
+            const firstError = validationErrors[0];
+            if (firstError) {
+              errorMsg += `\nThis means the schema rule for "${firstError.field}" is incorrect or missing.\n`;
+            }
+          } else if (isValid && !testItem.expectedResult) {
+            errorMsg += `\nProblem: Validation passed but test expected failure.\n`;
+            errorMsg += `This indicates the schema is too permissive - it should have rejected this data.\n`;
+            errorMsg += `The schema needs to be more strict to catch invalid data.\n`;
+          }
+
           failures.push(errorMsg);
           console.error(
             `\n✗ Mismatch [Case: ${caseName}, Model: ${model}, Mode: ${mode}]: Expected ${expectedStr}, got ${actualStr}`
           );
         } else if (verbose) {
           console.log(
-            `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'} - Match!`
+            `\n✓ Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${isValid ? 'PASS' : 'FAIL'} - Match!`
           );
         }
         caseResults.push({
           passed,
           expected: testItem.expectedResult,
-          passedAsExpected: result,
+          passedAsExpected: isValid,
         });
       }
 
@@ -170,7 +209,14 @@ export async function checkModelForTestCase(
 
       // If we have failures and more retries available, prepare feedback
       if (attempt < totalRetries) {
-        feedback = `The generated schema failed ${failures.length} out of ${config.testData.length} test cases:\n\n${failures.join('\n')}\n\nPlease fix the schema to correctly validate these test cases.`;
+        feedback = `The generated schema failed ${failures.length} out of ${config.testData.length} test cases.\n\n`;
+        feedback += `Current Generated Schema:\n${JSON.stringify(schema, null, 2)}\n\n`;
+        feedback += `Reference Schema (what it should be like):\n${JSON.stringify(config.referenceConfig, null, 2)}\n\n`;
+        feedback += `Detailed Test Failures:\n${failures.join('\n')}\n\n`;
+        feedback += `Please analyze the failures above and fix the schema. Pay attention to:\n`;
+        feedback += `- Which fields are causing validation errors\n`;
+        feedback += `- Whether the schema is too strict (rejecting valid data) or too permissive (accepting invalid data)\n`;
+        feedback += `- Compare your generated schema with the reference schema to understand what needs to be fixed\n`;
         if (verbose) {
           console.log(
             `\n✗ Schema failed ${failures.length}/${config.testData.length} tests. Retrying with feedback...`
@@ -215,7 +261,7 @@ export async function checkModelForTestCase(
   const hasFailures =
     caseError === undefined && caseResults.some((r) => !r.passed);
   if (hasFailures) {
-    result.debugInfo = {
+    const debugInfo: DebugInfo = {
       model,
       mode,
       caseName,
@@ -227,6 +273,7 @@ export async function checkModelForTestCase(
       llmCalls,
       messages: allMessages,
     };
+    result.debugInfo = debugInfo;
   }
 
   return result;

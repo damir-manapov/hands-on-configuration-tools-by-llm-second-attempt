@@ -11,6 +11,7 @@ import type { TestCase, TestCaseConfig } from './types.js';
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,
+  ValidationError,
 } from '../checker/run-config-check.js';
 import type { ConfigSchema } from '../core/config-checker.js';
 
@@ -20,7 +21,11 @@ describe('checkModelForTestCase', () => {
       options: GenerateSchemaOptions
     ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>
   >;
-  let mockCheckObject: MockedFunction<(options: CheckObjectOptions) => boolean>;
+  let mockCheckObject: MockedFunction<
+    (
+      options: CheckObjectOptions
+    ) => boolean | { valid: boolean; errors: ValidationError[] }
+  >;
 
   beforeEach(() => {
     mockGenerateSchema =
@@ -29,7 +34,19 @@ describe('checkModelForTestCase', () => {
           options: GenerateSchemaOptions
         ) => Promise<{ schema: ConfigSchema; messages: unknown[] }>
       >();
-    mockCheckObject = vi.fn<(options: CheckObjectOptions) => boolean>();
+    mockCheckObject =
+      vi.fn<
+        (
+          options: CheckObjectOptions
+        ) => boolean | { valid: boolean; errors: ValidationError[] }
+      >();
+    // Default implementation: return detailed format when returnDetails is true
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
   });
 
   const createTestCase = (testData: TestCaseConfig['testData']): TestCase => ({
@@ -64,7 +81,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -94,11 +116,13 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       objectJson: JSON.stringify({ name: 'John' }, null, 2),
       verbose: false,
+      returnDetails: true,
     });
     expect(mockCheckObject).toHaveBeenNthCalledWith(2, {
       schema: mockSchema,
       objectJson: JSON.stringify({ name: 'Jane' }, null, 2),
       verbose: false,
+      returnDetails: true,
     });
 
     expect(result.testResults).toHaveLength(2);
@@ -114,7 +138,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -145,7 +174,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(false);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: false, errors: [] };
+      }
+      return false;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -176,7 +210,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -203,7 +242,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -291,7 +335,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -322,7 +371,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -357,7 +411,12 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValue(true);
+    mockCheckObject.mockImplementation((options) => {
+      if (options.returnDetails) {
+        return { valid: true, errors: [] };
+      }
+      return true;
+    });
 
     await checkModelForTestCase(
       {
@@ -383,6 +442,7 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       objectJson: JSON.stringify({ name: 'John', age: 30 }, null, 2),
       verbose: true,
+      returnDetails: true,
     });
   });
 
@@ -397,7 +457,17 @@ describe('checkModelForTestCase', () => {
       schema: mockSchema,
       messages: [],
     });
-    mockCheckObject.mockReturnValueOnce(true).mockReturnValueOnce(false);
+    let callCount = 0;
+    mockCheckObject.mockImplementation((options) => {
+      callCount++;
+      if (options.returnDetails) {
+        // First call returns valid, second returns invalid
+        return callCount === 1
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [] };
+      }
+      return callCount === 1;
+    });
 
     const result = await checkModelForTestCase(
       {
@@ -499,7 +569,16 @@ describe('checkModelForTestCase', () => {
       mockGenerateSchema
         .mockResolvedValueOnce({ schema: firstSchema, messages: [] })
         .mockResolvedValueOnce({ schema: secondSchema, messages: [] });
-      mockCheckObject.mockReturnValueOnce(false).mockReturnValueOnce(true);
+      let callCount = 0;
+      mockCheckObject.mockImplementation((options) => {
+        callCount++;
+        if (options.returnDetails) {
+          return callCount === 1
+            ? { valid: false, errors: [] }
+            : { valid: true, errors: [] };
+        }
+        return callCount > 1;
+      });
 
       await checkModelForTestCase(
         {
@@ -554,7 +633,16 @@ describe('checkModelForTestCase', () => {
           schema: secondSchema,
           messages: secondMessages,
         });
-      mockCheckObject.mockReturnValueOnce(false).mockReturnValueOnce(true);
+      let callCount = 0;
+      mockCheckObject.mockImplementation((options) => {
+        callCount++;
+        if (options.returnDetails) {
+          return callCount === 1
+            ? { valid: false, errors: [] }
+            : { valid: true, errors: [] };
+        }
+        return callCount > 1;
+      });
 
       await checkModelForTestCase(
         {
@@ -611,7 +699,12 @@ describe('checkModelForTestCase', () => {
         messages: [],
       });
       // Always fail validation
-      mockCheckObject.mockReturnValue(false);
+      mockCheckObject.mockImplementation((options) => {
+        if (options.returnDetails) {
+          return { valid: false, errors: [] };
+        }
+        return false;
+      });
 
       const result = await checkModelForTestCase(
         {
@@ -647,7 +740,12 @@ describe('checkModelForTestCase', () => {
         schema: failingSchema,
         messages: [],
       });
-      mockCheckObject.mockReturnValue(false);
+      mockCheckObject.mockImplementation((options) => {
+        if (options.returnDetails) {
+          return { valid: false, errors: [] };
+        }
+        return false;
+      });
 
       const result = await checkModelForTestCase(
         {
@@ -804,7 +902,12 @@ describe('checkModelForTestCase', () => {
         schema: mockSchema,
         messages: [],
       });
-      mockCheckObject.mockReturnValue(false); // Test fails
+      mockCheckObject.mockImplementation((options) => {
+        if (options.returnDetails) {
+          return { valid: false, errors: [] };
+        }
+        return false;
+      }); // Test fails
 
       const result = await checkModelForTestCase(
         {
@@ -930,7 +1033,12 @@ describe('checkModelForTestCase', () => {
         schema: failingSchema,
         messages: [],
       });
-      mockCheckObject.mockReturnValue(false);
+      mockCheckObject.mockImplementation((options) => {
+        if (options.returnDetails) {
+          return { valid: false, errors: [] };
+        }
+        return false;
+      });
 
       const result = await checkModelForTestCase(
         {

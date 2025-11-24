@@ -466,9 +466,8 @@ async function main() {
       ).length;
       const testsStr = `${passedTests}/${totalTests}`;
 
-      // For individual config, we don't have a separate score, so use a placeholder
-      // or calculate a simple pass/fail score
-      const scoreStr = allPassed ? '1.000' : '0.000';
+      // Use model-level score for sorting consistency (same score for all rows of same model)
+      const scoreStr = modelSummary.score.score.toFixed(3);
       const avgTimeStr = formatTime(caseResult.duration);
       const llmCallsStr = String(caseResult.llmCalls);
 

@@ -414,60 +414,38 @@ async function main() {
   };
 
   for (const modelSummary of summary.models) {
-    const hasErrors = modelSummary.caseResults.some((r) => r.error);
-    const allPassed =
-      !hasErrors &&
-      modelSummary.caseResults.every((r) =>
-        r.testResults.every((tr) => tr.passed)
-      );
-    const status = hasErrors ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
-    const casesStr = `${modelSummary.score.successfulCases}/${modelSummary.score.totalCases}`;
-
-    // Calculate total tests (sum of all testResults lengths)
-    const totalTests = modelSummary.caseResults.reduce(
-      (sum, r) => sum + r.testResults.length,
-      0
-    );
-    const passedTests = modelSummary.caseResults.reduce(
-      (sum, r) => sum + r.testResults.filter((tr) => tr.passed).length,
-      0
-    );
-    const testsStr = `${passedTests}/${totalTests}`;
-
-    const scoreStr = modelSummary.score.score.toFixed(3);
-    const avgTimeStr = formatTime(modelSummary.score.averageTime);
-    // Get mode from first case result (all should have the same mode)
-    const modeStr =
-      modelSummary.caseResults.length > 0
-        ? modelSummary.caseResults[0]!.mode
-        : 'N/A';
-
-    // Group case results by case name for display
-    const caseConfigs = new Map<string, string[]>();
+    // Create one row per config (caseResult)
     for (const caseResult of modelSummary.caseResults) {
-      if (!caseConfigs.has(caseResult.caseName)) {
-        caseConfigs.set(caseResult.caseName, []);
-      }
-      caseConfigs.get(caseResult.caseName)!.push(caseResult.configName);
+      const hasError = !!caseResult.error;
+      const allPassed =
+        !hasError && caseResult.testResults.every((tr) => tr.passed);
+      const status = hasError ? 'ERROR' : allPassed ? 'PASSED' : 'FAILED';
+
+      // Calculate stats for this specific config
+      const casesStr = allPassed ? '1/1' : '0/1';
+      const totalTests = caseResult.testResults.length;
+      const passedTests = caseResult.testResults.filter(
+        (tr) => tr.passed
+      ).length;
+      const testsStr = `${passedTests}/${totalTests}`;
+
+      // For individual config, we don't have a separate score, so use a placeholder
+      // or calculate a simple pass/fail score
+      const scoreStr = allPassed ? '1.000' : '0.000';
+      const avgTimeStr = formatTime(caseResult.duration);
+
+      tableData.push([
+        modelSummary.model,
+        caseResult.mode,
+        caseResult.caseName,
+        caseResult.configName,
+        casesStr,
+        testsStr,
+        scoreStr,
+        avgTimeStr,
+        status,
+      ]);
     }
-
-    // Create a row with case and config info
-    const caseNames = Array.from(caseConfigs.keys());
-    const caseNameStr = caseNames.join(', ') || 'N/A';
-    const configNames =
-      Array.from(caseConfigs.values()).flat().join(', ') || 'N/A';
-
-    tableData.push([
-      modelSummary.model,
-      modeStr,
-      caseNameStr,
-      configNames,
-      casesStr,
-      testsStr,
-      scoreStr,
-      avgTimeStr,
-      status,
-    ]);
   }
 
   // Print markdown table

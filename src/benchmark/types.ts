@@ -16,16 +16,21 @@ export interface TestData {
   description?: string; // Optional description explaining what this test case checks
 }
 
-export interface TestCase {
+export interface TestCaseConfig {
   name: string;
   checkDescription: string;
+  testData: TestData[];
+  referenceConfig: ConfigSchema;
+}
+
+export interface TestCase {
+  name: string;
   objectJsonSchema: {
     type: 'object';
     required: string[];
     properties: Record<string, { type: string; items?: { type: string } }>;
   };
-  testData: TestData[];
-  referenceConfig: ConfigSchema;
+  configs: TestCaseConfig[];
 }
 
 export interface CaseResult {

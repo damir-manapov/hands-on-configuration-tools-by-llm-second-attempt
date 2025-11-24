@@ -99,9 +99,22 @@ async function main() {
       !arg.startsWith('-') &&
       !arg.includes('{') &&
       !arg.startsWith('--mode=') &&
-      !arg.startsWith('--models=')
+      !arg.startsWith('--models=') &&
+      !arg.startsWith('--configs=')
   );
   const customObjectJson = args.find((arg) => arg.startsWith('{'));
+
+  // Parse configs argument - if provided, filter configs by name
+  const configsArg = args.find((arg) => arg.startsWith('--configs='));
+  let configNamesToRun: string[] | undefined;
+  if (configsArg) {
+    const configsValue = configsArg.split('=')[1];
+    if (!configsValue) {
+      console.error('--configs= requires a value');
+      process.exit(1);
+    }
+    configNamesToRun = configsValue.split(',').map((s) => s.trim());
+  }
 
   let casesToRun = TEST_CASES;
   if (caseName) {
@@ -117,6 +130,30 @@ async function main() {
     }
   }
 
+  // Filter configs if config names are provided
+  if (configNamesToRun) {
+    casesToRun = casesToRun.map((testCase) => ({
+      ...testCase,
+      configs: testCase.configs.filter((config) =>
+        configNamesToRun.some(
+          (name) => config.name.toLowerCase() === name.toLowerCase()
+        )
+      ),
+    }));
+    // Remove test cases with no matching configs
+    casesToRun = casesToRun.filter((tc) => tc.configs.length > 0);
+    if (casesToRun.length === 0) {
+      console.error(
+        `No configs found matching: ${configNamesToRun.join(', ')}`
+      );
+      const allConfigs = TEST_CASES.flatMap((tc) =>
+        tc.configs.map((c) => `${tc.name}:${c.name}`)
+      );
+      console.error(`Available configs: ${allConfigs.join(', ')}`);
+      process.exit(1);
+    }
+  }
+
   // If customObjectJson provided, add it as a new test data item to all test cases
   if (customObjectJson) {
     try {
@@ -126,13 +163,16 @@ async function main() {
       >;
       casesToRun = casesToRun.map((testCase) => ({
         ...testCase,
-        testData: [
-          ...testCase.testData,
-          {
-            data: parsedData,
-            expectedResult: true,
-          },
-        ],
+        configs: testCase.configs.map((config) => ({
+          ...config,
+          testData: [
+            ...config.testData,
+            {
+              data: parsedData,
+              expectedResult: true,
+            },
+          ],
+        })),
       }));
     } catch (error) {
       console.error(
@@ -184,63 +224,70 @@ async function main() {
     ]);
   }
 
-  // Calculate total combinations across all test cases
+  // Calculate total combinations across all test cases and configs
+  const totalConfigs = casesToRun.reduce(
+    (sum, testCase) => sum + testCase.configs.length,
+    0
+  );
   const totalCombinations =
-    casesToRun.length * modelsToTest.length * modesToTest.length;
+    totalConfigs * modelsToTest.length * modesToTest.length;
   let completedCount = 0;
 
   console.log(
-    `\nRunning all test cases concurrently: ${casesToRun.length} test cases × ${modelsToTest.length} models × ${modesToTest.length} modes = ${totalCombinations} total combinations...`
+    `\nRunning all test cases concurrently: ${totalConfigs} configs (across ${casesToRun.length} test cases) × ${modelsToTest.length} models × ${modesToTest.length} modes = ${totalCombinations} total combinations...`
   );
 
   // Create promises for all test cases, models, and modes
   const allPromises: Promise<CaseResult>[] = [];
 
   for (const testCase of casesToRun) {
-    for (const mode of modesToTest) {
-      const modelPromises = modelsToTest.map((model) =>
-        withTimeout(
-          checkModelForTestCase(
-            {
-              testCase,
-              model,
-              mode,
-              verbose,
-            },
-            generateConfigSchema,
-            checkObjectAgainstSchema
-          ),
-          60_000, // 1 minute timeout per model/test case combination
-          `Timeout for ${model} (${mode}) on ${testCase.name}`
-        )
-          .then((result) => {
-            completedCount++;
-            if (!verbose) {
-              process.stderr.write(
-                `\rProgress: ${completedCount}/${totalCombinations} completed...`
-              );
-            }
-            return result;
-          })
-          .catch((error) => {
-            completedCount++;
-            if (!verbose) {
-              process.stderr.write(
-                `\rProgress: ${completedCount}/${totalCombinations} completed...`
-              );
-            }
-            // Return error result instead of throwing
-            return {
-              caseName: testCase.name,
-              model,
-              mode,
-              error: error instanceof Error ? error.message : String(error),
-              testResults: [],
-              duration: 0,
-            };
-          })
-      );
-      allPromises.push(...modelPromises);
+    for (const config of testCase.configs) {
+      for (const mode of modesToTest) {
+        const modelPromises = modelsToTest.map((model) =>
+          withTimeout(
+            checkModelForTestCase(
+              {
+                testCase,
+                config,
+                model,
+                mode,
+                verbose,
+              },
+              generateConfigSchema,
+              checkObjectAgainstSchema
+            ),
+            60_000, // 1 minute timeout per model/test case combination
+            `Timeout for ${model} (${mode}) on ${testCase.name} - ${config.name}`
+          )
+            .then((result) => {
+              completedCount++;
+              if (!verbose) {
+                process.stderr.write(
+                  `\rProgress: ${completedCount}/${totalCombinations} completed...`
+                );
+              }
+              return result;
+            })
+            .catch((error) => {
+              completedCount++;
+              if (!verbose) {
+                process.stderr.write(
+                  `\rProgress: ${completedCount}/${totalCombinations} completed...`
+                );
+              }
+              // Return error result instead of throwing
+              return {
+                caseName: `${testCase.name} - ${config.name}`,
+                model,
+                mode,
+                error: error instanceof Error ? error.message : String(error),
+                testResults: [],
+                duration: 0,
+              };
+            })
+        );
+        allPromises.push(...modelPromises);
+      }
     }
   }
 

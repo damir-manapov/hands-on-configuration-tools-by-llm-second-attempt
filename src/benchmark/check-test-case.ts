@@ -3,6 +3,7 @@ import type {
   TestResult,
   Mode,
   TestCase,
+  TestCaseConfig,
   TestData,
 } from './types.js';
 import type {
@@ -15,6 +16,7 @@ import { ConfigChecker } from '../core/config-checker.js';
 
 export interface CheckModelOptions {
   testCase: TestCase;
+  config: TestCaseConfig;
   model: string;
   mode: Mode;
   verbose: boolean;
@@ -37,25 +39,26 @@ export async function checkModelForTestCase(
   generateSchema: (options: GenerateSchemaOptions) => Promise<ConfigSchema>,
   checkObject: (options: CheckObjectOptions) => boolean
 ): Promise<CaseResult & { debugInfo?: DebugInfo }> {
-  const { testCase, model, mode, verbose } = options;
+  const { testCase, config, model, mode, verbose } = options;
   const caseResults: TestResult[] = [];
   let caseError: string | undefined;
   let generatedSchema: ConfigSchema | undefined;
   const startTime = Date.now();
+  const caseName = `${testCase.name} - ${config.name}`;
 
   if (verbose) {
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`Test Case: ${testCase.name} | Model: ${model}`);
+    console.log(`Test Case: ${caseName} | Model: ${model}`);
     console.log('='.repeat(60));
   }
 
   try {
-    // Generate schema ONCE for this test case (shared by all test data items)
+    // Generate schema ONCE for this config (shared by all test data items)
     if (verbose) {
       console.log('\n--- Generating Schema ---');
     }
     const schema = await generateSchema({
-      checkDescription: testCase.checkDescription,
+      checkDescription: config.checkDescription,
       objectJsonSchema: testCase.objectJsonSchema,
       verbose,
       mode,
@@ -70,13 +73,13 @@ export async function checkModelForTestCase(
     }
 
     // Run all test data items against the same schema
-    for (let i = 0; i < testCase.testData.length; i++) {
-      const testItem = testCase.testData[i];
+    for (let i = 0; i < config.testData.length; i++) {
+      const testItem = config.testData[i];
       if (!testItem) {
         continue;
       }
       if (verbose) {
-        console.log(`\n--- Test Data ${i + 1}/${testCase.testData.length} ---`);
+        console.log(`\n--- Test Data ${i + 1}/${config.testData.length} ---`);
       }
 
       const objectJson = JSON.stringify(testItem.data, null, 2);
@@ -90,7 +93,7 @@ export async function checkModelForTestCase(
       const passed = result === testItem.expectedResult;
       if (!passed) {
         console.error(
-          `\n✗ Mismatch [Case: ${testCase.name}, Model: ${model}, Mode: ${mode}]: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
+          `\n✗ Mismatch [Case: ${caseName}, Model: ${model}, Mode: ${mode}]: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, got ${result ? 'PASS' : 'FAIL'}`
         );
       } else if (verbose) {
         console.log(
@@ -108,14 +111,14 @@ export async function checkModelForTestCase(
     if (error instanceof InvalidModelError) {
       caseError = `[Model: ${error.modelId}, Mode: ${mode}] Invalid model ID: ${error.modelId}${error.statusCode ? ` (HTTP ${error.statusCode})` : ''}`;
       console.error(
-        `\n✗ ERROR: Invalid model ID for "${testCase.name}" (Model: ${error.modelId}, Mode: ${mode}):`,
+        `\n✗ ERROR: Invalid model ID for "${caseName}" (Model: ${error.modelId}, Mode: ${mode}):`,
         `Model "${error.modelId}" is not a valid model ID${error.statusCode ? ` (HTTP ${error.statusCode})` : ''}`
       );
     } else {
       const errorMessage = getErrorMessage(error);
       caseError = `[Model: ${model}, Mode: ${mode}] ${errorMessage}`;
       console.error(
-        `\n✗ ERROR: Unexpected problem prevented tests from running for "${testCase.name}" (Model: ${model}, Mode: ${mode}):`,
+        `\n✗ ERROR: Unexpected problem prevented tests from running for "${caseName}" (Model: ${model}, Mode: ${mode}):`,
         errorMessage
       );
     }
@@ -125,7 +128,7 @@ export async function checkModelForTestCase(
   const duration = endTime - startTime;
 
   const result: CaseResult & { debugInfo?: DebugInfo } = {
-    caseName: testCase.name,
+    caseName,
     model,
     mode,
     ...(caseError ? { error: caseError } : {}),
@@ -141,11 +144,11 @@ export async function checkModelForTestCase(
     result.debugInfo = {
       model,
       mode,
-      caseName: testCase.name,
-      checkDescription: testCase.checkDescription,
-      referenceConfig: testCase.referenceConfig,
+      caseName,
+      checkDescription: config.checkDescription,
+      referenceConfig: config.referenceConfig,
       generatedConfig: generatedSchema,
-      testData: testCase.testData,
+      testData: config.testData,
       testResults: caseResults,
     };
   }
@@ -162,37 +165,40 @@ export async function checkModelForTestCase(
 export function validateTestCase(testCase: TestCase): string[] {
   const errors: string[] = [];
 
-  const requiredFields = testCase.objectJsonSchema.required || [];
-  const checker = new ConfigChecker(testCase.referenceConfig);
+  for (const config of testCase.configs) {
+    const requiredFields = testCase.objectJsonSchema.required || [];
+    const checker = new ConfigChecker(config.referenceConfig);
 
-  for (let i = 0; i < testCase.testData.length; i++) {
-    const testItem = testCase.testData[i];
-    if (!testItem) {
-      continue;
-    }
+    for (let i = 0; i < config.testData.length; i++) {
+      const testItem = config.testData[i];
+      if (!testItem) {
+        continue;
+      }
 
-    // Check required fields
-    const missingRequiredFields = requiredFields.filter(
-      (field) =>
-        !(field in testItem.data) ||
-        testItem.data[field] === null ||
-        testItem.data[field] === undefined
-    );
+      // Check required fields
+      const missingRequiredFields = requiredFields.filter(
+        (field) =>
+          !(field in testItem.data) ||
+          testItem.data[field] === null ||
+          testItem.data[field] === undefined
+      );
 
-    // Determine expected result based on required fields and reference config
-    const hasRequiredFields = missingRequiredFields.length === 0;
-    const passesReferenceConfig = checker.check(testItem.data);
-    const actualResult = hasRequiredFields && passesReferenceConfig;
+      // Determine expected result based on required fields and reference config
+      const hasRequiredFields = missingRequiredFields.length === 0;
+      const passesReferenceConfig = checker.check(testItem.data);
+      const actualResult = hasRequiredFields && passesReferenceConfig;
 
-    if (actualResult !== testItem.expectedResult) {
-      if (!hasRequiredFields && testItem.expectedResult) {
-        errors.push(
-          `Test case "${testCase.name}", test data item ${i + 1}: Expected PASS but required fields are missing: ${missingRequiredFields.join(', ')}. Data: ${JSON.stringify(testItem.data)}`
-        );
-      } else {
-        errors.push(
-          `Test case "${testCase.name}", test data item ${i + 1}: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, but reference config returned ${actualResult ? 'PASS' : 'FAIL'}. Data: ${JSON.stringify(testItem.data)}`
-        );
+      if (actualResult !== testItem.expectedResult) {
+        const caseName = `${testCase.name} - ${config.name}`;
+        if (!hasRequiredFields && testItem.expectedResult) {
+          errors.push(
+            `Test case "${caseName}", test data item ${i + 1}: Expected PASS but required fields are missing: ${missingRequiredFields.join(', ')}. Data: ${JSON.stringify(testItem.data)}`
+          );
+        } else {
+          errors.push(
+            `Test case "${caseName}", test data item ${i + 1}: Expected ${testItem.expectedResult ? 'PASS' : 'FAIL'}, but reference config returned ${actualResult ? 'PASS' : 'FAIL'}. Data: ${JSON.stringify(testItem.data)}`
+          );
+        }
       }
     }
   }

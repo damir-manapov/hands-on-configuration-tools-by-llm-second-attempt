@@ -7,7 +7,7 @@ import {
   type MockedFunction,
 } from 'vitest';
 import { checkModelForTestCase } from './check-test-case.js';
-import type { TestCase } from './types.js';
+import type { TestCase, TestCaseConfig } from './types.js';
 import type {
   GenerateSchemaOptions,
   CheckObjectOptions,
@@ -26,9 +26,8 @@ describe('checkModelForTestCase', () => {
     mockCheckObject = vi.fn<(options: CheckObjectOptions) => boolean>();
   });
 
-  const createTestCase = (testData: TestCase['testData']): TestCase => ({
+  const createTestCase = (testData: TestCaseConfig['testData']): TestCase => ({
     name: 'TestCase',
-    checkDescription: 'Test description',
     objectJsonSchema: {
       type: 'object',
       required: ['name'],
@@ -36,10 +35,16 @@ describe('checkModelForTestCase', () => {
         name: { type: 'string' },
       },
     },
-    testData,
-    referenceConfig: {
-      name: { type: 'string' },
-    },
+    configs: [
+      {
+        name: 'Test config',
+        checkDescription: 'Test description',
+        testData,
+        referenceConfig: {
+          name: { type: 'string' },
+        },
+      },
+    ],
   });
 
   it('should generate schema once and check all test data items', async () => {
@@ -55,6 +60,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -101,6 +107,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -128,6 +135,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -155,6 +163,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -178,6 +187,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'promptBased',
         verbose: false,
@@ -200,6 +210,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -227,6 +238,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -245,8 +257,8 @@ describe('checkModelForTestCase', () => {
   it('should skip null or undefined test items', async () => {
     const testCase = createTestCase([
       { data: { name: 'John' }, expectedResult: true },
-      null as unknown as TestCase['testData'][0],
-      undefined as unknown as TestCase['testData'][0],
+      null as unknown as TestCaseConfig['testData'][0],
+      undefined as unknown as TestCaseConfig['testData'][0],
       { data: { name: 'Jane' }, expectedResult: true },
     ]);
 
@@ -257,6 +269,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -284,6 +297,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'test-model',
         mode: 'toolBased',
         verbose: false,
@@ -296,7 +310,7 @@ describe('checkModelForTestCase', () => {
       caseName: result.caseName,
       model: result.model,
     }).toEqual({
-      caseName: 'TestCase',
+      caseName: 'TestCase - Test config',
       model: 'test-model',
     });
   });
@@ -313,6 +327,7 @@ describe('checkModelForTestCase', () => {
     await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: true,
@@ -349,6 +364,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,
@@ -373,6 +389,7 @@ describe('checkModelForTestCase', () => {
     const result = await checkModelForTestCase(
       {
         testCase,
+        config: testCase.configs[0]!,
         model: 'model1',
         mode: 'toolBased',
         verbose: false,

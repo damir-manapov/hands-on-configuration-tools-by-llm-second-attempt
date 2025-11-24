@@ -78,4 +78,82 @@ describe('validateTestCase', () => {
     const errors = validateTestCase(testCase);
     expect(errors).toEqual([]);
   });
+
+  it('should handle optional fields correctly', () => {
+    const testCase: TestCase = {
+      name: 'Test',
+      objectJsonSchema: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: { type: 'string' },
+          description: { type: 'string' },
+        },
+      },
+      configs: [
+        {
+          name: 'Test config',
+          checkDescription: 'Test description',
+          referenceConfig: {
+            name: { type: 'string' },
+            description: { type: 'string', maxLength: 100 },
+          } as ConfigSchema,
+          testData: [
+            {
+              data: { name: 'John' }, // Missing optional description - should pass
+              expectedResult: true,
+            },
+            {
+              data: { name: 'John', description: 'A'.repeat(50) }, // Valid description - should pass
+              expectedResult: true,
+            },
+            {
+              data: { name: 'John', description: 'A'.repeat(101) }, // Too long - should fail
+              expectedResult: false,
+            },
+          ],
+        },
+      ],
+    };
+
+    const errors = validateTestCase(testCase);
+    expect(errors).toEqual([]);
+  });
+
+  it('should detect missing required fields', () => {
+    const testCase: TestCase = {
+      name: 'Test',
+      objectJsonSchema: {
+        type: 'object',
+        required: ['name', 'age'],
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' },
+        },
+      },
+      configs: [
+        {
+          name: 'Test config',
+          checkDescription: 'Test description',
+          referenceConfig: {
+            name: { type: 'string' },
+            age: { type: 'number' },
+          } as ConfigSchema,
+          testData: [
+            {
+              data: { name: 'John' }, // Missing required age - should fail
+              expectedResult: false,
+            },
+            {
+              data: { name: 'John', age: 30 }, // All required fields present - should pass
+              expectedResult: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    const errors = validateTestCase(testCase);
+    expect(errors).toEqual([]);
+  });
 });

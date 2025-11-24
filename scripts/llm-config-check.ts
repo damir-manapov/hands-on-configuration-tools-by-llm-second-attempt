@@ -4,7 +4,7 @@
 // tsx scripts/llm-config-check.ts --models=mistralAll --mode=promptBased
 // tsx scripts/llm-config-check.ts --models=topScoredMistral --mode=promptBased
 // tsx scripts/llm-config-check.ts user --models=mistralai/codestral-2501 --mode=promptBased
-// tsx scripts/llm-config-check.ts product --models=mistralai/codestral-2501 --mode=promptBased
+// tsx scripts/llm-config-check.ts ProductLongDescription --models=mistralai/codestral-2501 --mode=promptBased
 
 import { markdownTable } from 'markdown-table';
 import { writeFileSync } from 'fs';

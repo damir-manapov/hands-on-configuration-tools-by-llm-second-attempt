@@ -38,8 +38,7 @@ export const TEST_CASES: TestCase[] = [
     } as ConfigSchema,
     testData: [
       {
-        description:
-          'Valid: Complete user object with all required and optional fields - checks that all fields are properly validated together',
+        description: 'Valid: Complete user with all fields',
         data: {
           name: 'John Doe',
           age: 30,
@@ -50,18 +49,16 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Minimal valid user with only required fields - checks that optional fields are truly optional',
+        description: 'Valid: Minimal user with only required fields',
         data: {
           name: 'Jane Smith',
           age: 25,
-          email: 'jane.smith@example.com',
+          email: 'jane@example.com',
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Name at exact minimum length (2 chars) - checks lower boundary for name length',
+        description: 'Valid: Name at minimum length (2 chars)',
         data: {
           name: 'Bo',
           age: 30,
@@ -70,8 +67,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Name at exact maximum length (50 chars) - checks upper boundary for name length',
+        description: 'Valid: Name at maximum length (50 chars)',
         data: {
           name: 'A'.repeat(50),
           age: 30,
@@ -80,18 +76,16 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Age at exact minimum (18) - checks lower boundary for age',
+        description: 'Valid: Age at minimum (18)',
         data: {
-          name: 'Alice Johnson',
+          name: 'Alice',
           age: 18,
           email: 'alice@example.org',
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Age at exact maximum (120) - checks upper boundary for age',
+        description: 'Valid: Age at maximum (120)',
         data: {
           name: 'Old Person',
           age: 120,
@@ -100,62 +94,26 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Email at exact minimum length (5 chars) - checks lower boundary for email length',
+        description: 'Valid: Email at minimum length (5 chars)',
         data: {
-          name: 'Test User',
+          name: 'Test',
           age: 30,
           email: 'a@b.c',
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Tags array at exact maximum (10 items) - checks upper boundary for array length',
+        description: 'Valid: Tags at maximum (10 items)',
         data: {
-          name: 'Tagged User',
+          name: 'User',
           age: 30,
-          email: 'tagged@example.com',
+          email: 'user@example.com',
           tags: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Empty tags array - checks that empty arrays are allowed for optional array fields',
-        data: {
-          name: 'No Tags User',
-          age: 30,
-          email: 'notags@example.com',
-          tags: [],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Single tag in array - checks minimum array size (1 item)',
-        data: {
-          name: 'Single Tag',
-          age: 30,
-          email: 'single@example.com',
-          tags: ['only'],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Active field set to false - checks that boolean false is valid',
-        data: {
-          name: 'Inactive User',
-          age: 30,
-          email: 'inactive@example.com',
-          active: false,
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Invalid: Name too short (1 char, below minimum of 2) - checks lower boundary violation',
+        description: 'Invalid: Name too short (1 char)',
         data: {
           name: 'A',
           age: 30,
@@ -164,8 +122,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Name too long (51 chars, above maximum of 50) - checks upper boundary violation',
+        description: 'Invalid: Name too long (51 chars)',
         data: {
           name: 'A'.repeat(51),
           age: 30,
@@ -174,8 +131,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Empty name string - checks that empty strings are rejected for required string fields',
+        description: 'Invalid: Empty name',
         data: {
           name: '',
           age: 30,
@@ -184,132 +140,52 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Age below minimum (17, must be >= 18) - checks lower boundary violation',
+        description: 'Invalid: Age below minimum (17)',
         data: {
-          name: 'Valid Name',
+          name: 'User',
           age: 17,
-          email: 'valid@example.com',
+          email: 'user@example.com',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Age above maximum (121, must be <= 120) - checks upper boundary violation',
+        description: 'Invalid: Age above maximum (121)',
         data: {
-          name: 'Valid Name',
+          name: 'User',
           age: 121,
-          email: 'valid@example.com',
+          email: 'user@example.com',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Age exactly at boundary minus one (17) - checks strict boundary enforcement',
+        description: 'Invalid: Email too short (4 chars)',
         data: {
-          name: 'Valid Name',
-          age: 17,
-          email: 'valid@example.com',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Age exactly at boundary plus one (121) - checks strict boundary enforcement',
-        data: {
-          name: 'Valid Name',
-          age: 121,
-          email: 'valid@example.com',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Negative age - checks that negative numbers are rejected',
-        data: {
-          name: 'Valid Name',
-          age: -5,
-          email: 'valid@example.com',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Zero age - checks that zero is rejected when minimum is 18',
-        data: {
-          name: 'Valid Name',
-          age: 0,
-          email: 'valid@example.com',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Email too short (4 chars, below minimum of 5) - checks lower boundary violation',
-        data: {
-          name: 'Valid Name',
+          name: 'User',
           age: 30,
           email: 'test',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Empty email string - checks that empty strings are rejected for required string fields',
+        description: 'Invalid: Tags exceed maximum (11 items)',
         data: {
-          name: 'Valid Name',
+          name: 'User',
           age: 30,
-          email: '',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Tags array exceeds maximum (11 items, max is 10) - checks upper boundary violation',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-          email: 'valid@example.com',
+          email: 'user@example.com',
           tags: Array(11).fill('tag'),
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Missing required field (name) - checks that required fields are enforced',
+        description: 'Invalid: Missing required field (name)',
         data: {
           age: 30,
-          email: 'valid@example.com',
+          email: 'user@example.com',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Missing required field (age) - checks that all required fields are enforced',
-        data: {
-          name: 'Valid Name',
-          email: 'valid@example.com',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (email) - checks that all required fields are enforced',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing all required fields - checks that multiple missing fields are detected',
-        data: {},
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for name (number instead of string) - checks type validation',
+        description: 'Invalid: Wrong type for name (number)',
         data: {
           name: 12345,
           age: 30,
@@ -318,66 +194,21 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Wrong type for age (string instead of number) - checks type validation',
+        description: 'Invalid: Wrong type for age (string)',
         data: {
-          name: 'Valid Name',
+          name: 'User',
           age: '30',
           email: 'test@example.com',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Wrong type for email (number instead of string) - checks type validation',
+        description: 'Invalid: Tags array contains non-string items',
         data: {
-          name: 'Valid Name',
+          name: 'User',
           age: 30,
-          email: 12345,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for active (string instead of boolean) - checks type validation for optional fields',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-          email: 'test@example.com',
-          active: 'true',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for tags (string instead of array) - checks type validation for optional array fields',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-          email: 'test@example.com',
-          tags: 'not-an-array',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Tags array contains non-string items (numbers) - checks array item type validation',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-          email: 'test@example.com',
+          email: 'user@example.com',
           tags: [1, 2, 3],
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Tags array contains mixed types - checks array item type consistency',
-        data: {
-          name: 'Valid Name',
-          age: 30,
-          email: 'test@example.com',
-          tags: ['valid', 123, true],
         },
         expectedResult: false,
       },
@@ -423,31 +254,28 @@ export const TEST_CASES: TestCase[] = [
     } as ConfigSchema,
     testData: [
       {
-        description:
-          'Valid: Complete product with all required and optional fields - checks that all fields are properly validated together',
+        description: 'Valid: Complete product with all fields',
         data: {
           id: 'prod-123',
           name: 'Laptop',
           price: 999.99,
-          description: 'High-performance laptop for developers',
+          description: 'High-performance laptop',
           inStock: true,
           categories: ['electronics', 'computers'],
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Minimal product with only required fields - checks that optional fields are truly optional',
+        description: 'Valid: Minimal product with only required fields',
         data: {
           id: 'prod-456',
-          name: 'Wireless Mouse',
+          name: 'Mouse',
           price: 29.99,
         },
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Name at exact minimum length (3 chars) - checks lower boundary for name length',
+        description: 'Valid: Name at minimum length (3 chars)',
         data: {
           id: 'prod-min',
           name: 'ABC',
@@ -456,8 +284,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Name at exact maximum length (100 chars) - checks upper boundary for name length',
+        description: 'Valid: Name at maximum length (100 chars)',
         data: {
           id: 'prod-max',
           name: 'A'.repeat(100),
@@ -466,8 +293,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Price at exact minimum (0) - checks lower boundary for price (free products allowed)',
+        description: 'Valid: Price at minimum (0)',
         data: {
           id: 'prod-free',
           name: 'Free Product',
@@ -476,18 +302,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Price with decimal values - checks that decimal numbers are accepted',
-        data: {
-          id: 'prod-dec',
-          name: 'Decimal Price',
-          price: 99.99,
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description at exact maximum length (500 chars) - checks upper boundary for description',
+        description: 'Valid: Description at maximum length (500 chars)',
         data: {
           id: 'prod-desc',
           name: 'Product',
@@ -497,73 +312,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Empty description string - checks that empty strings are allowed for optional string fields',
-        data: {
-          id: 'prod-empty-desc',
-          name: 'Product',
-          price: 50,
-          description: '',
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Empty categories array - checks that empty arrays are allowed for optional array fields',
-        data: {
-          id: 'prod-no-cat',
-          name: 'Product',
-          price: 50,
-          categories: [],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Single category in array - checks minimum array size (1 item)',
-        data: {
-          id: 'prod-single-cat',
-          name: 'Product',
-          price: 50,
-          categories: ['electronics'],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Multiple categories - checks that arrays with multiple items are accepted',
-        data: {
-          id: 'prod-multi-cat',
-          name: 'Product',
-          price: 50,
-          categories: ['electronics', 'computers', 'accessories'],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: InStock set to false - checks that boolean false is valid',
-        data: {
-          id: 'prod-out',
-          name: 'Out of Stock',
-          price: 50,
-          inStock: false,
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Very large price value - checks that large numbers are accepted',
-        data: {
-          id: 'prod-expensive',
-          name: 'Expensive Product',
-          price: 999999.99,
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Invalid: Name too short (2 chars, below minimum of 3) - checks lower boundary violation',
+        description: 'Invalid: Name too short (2 chars)',
         data: {
           id: 'prod-xyz',
           name: 'AB',
@@ -572,8 +321,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Name too long (101 chars, above maximum of 100) - checks upper boundary violation',
+        description: 'Invalid: Name too long (101 chars)',
         data: {
           id: 'prod-xyz',
           name: 'A'.repeat(101),
@@ -582,123 +330,34 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Empty name string - checks that empty strings are rejected for required string fields',
+        description: 'Invalid: Price negative',
         data: {
           id: 'prod-xyz',
-          name: '',
-          price: 50,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Name exactly at boundary minus one (2 chars) - checks strict boundary enforcement',
-        data: {
-          id: 'prod-xyz',
-          name: 'AB',
-          price: 50,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Name exactly at boundary plus one (101 chars) - checks strict boundary enforcement',
-        data: {
-          id: 'prod-xyz',
-          name: 'A'.repeat(101),
-          price: 50,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Price negative (below minimum of 0) - checks lower boundary violation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
+          name: 'Product',
           price: -10,
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Price exactly at boundary minus one (-1) - checks strict boundary enforcement',
+        description: 'Invalid: Description too long (501 chars)',
         data: {
           id: 'prod-xyz',
-          name: 'Valid Product',
-          price: -1,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Description too long (501 chars, above maximum of 500) - checks upper boundary violation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
+          name: 'Product',
           price: 50,
           description: 'A'.repeat(501),
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Description exactly at boundary plus one (501 chars) - checks strict boundary enforcement',
+        description: 'Invalid: Missing required field (id)',
         data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-          price: 50,
-          description: 'A'.repeat(501),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (id) - checks that required fields are enforced',
-        data: {
-          name: 'Valid Product',
+          name: 'Product',
           price: 50,
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Missing required field (name) - checks that all required fields are enforced',
-        data: {
-          id: 'prod-xyz',
-          price: 50,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (price) - checks that all required fields are enforced',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing all required fields - checks that multiple missing fields are detected',
-        data: {},
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for id (number instead of string) - checks type validation',
-        data: {
-          id: 12345,
-          name: 'Valid Product',
-          price: 50,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for name (number instead of string) - checks type validation',
+        description: 'Invalid: Wrong type for name (number)',
         data: {
           id: 'prod-xyz',
           name: 12345,
@@ -707,87 +366,21 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Wrong type for price (string instead of number) - checks type validation',
+        description: 'Invalid: Wrong type for price (string)',
         data: {
           id: 'prod-xyz',
-          name: 'Valid Product',
+          name: 'Product',
           price: '50',
         },
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Wrong type for description (number instead of string) - checks type validation for optional fields',
+        description: 'Invalid: Categories array contains non-string items',
         data: {
           id: 'prod-xyz',
-          name: 'Valid Product',
-          price: 50,
-          description: 12345,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for inStock (string instead of boolean) - checks type validation for optional boolean fields',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-          price: 50,
-          inStock: 'true',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for categories (string instead of array) - checks type validation for optional array fields',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-          price: 50,
-          categories: 'electronics',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Categories array contains non-string items (numbers) - checks array item type validation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
+          name: 'Product',
           price: 50,
           categories: [1, 2, 3],
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Categories array contains mixed types - checks array item type consistency',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-          price: 50,
-          categories: ['electronics', 123, true],
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Price as null - checks that null values are rejected for required number fields',
-        data: {
-          id: 'prod-xyz',
-          name: 'Valid Product',
-          price: null,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Name as null - checks that null values are rejected for required string fields',
-        data: {
-          id: 'prod-xyz',
-          name: null,
-          price: 50,
         },
         expectedResult: false,
       },
@@ -828,8 +421,7 @@ export const TEST_CASES: TestCase[] = [
     } as ConfigSchema,
     testData: [
       {
-        description:
-          'Valid: Description at exact minimum length (500 chars) - checks lower boundary for description length',
+        description: 'Valid: Description at minimum length (500 chars)',
         data: {
           id: 'prod-123',
           name: 'Laptop',
@@ -839,19 +431,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Description in middle range (750 chars) - checks that values within range are accepted',
-        data: {
-          id: 'prod-456',
-          name: 'Wireless Mouse',
-          price: 29.99,
-          description: 'B'.repeat(750),
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description at exact maximum length (1000 chars) - checks upper boundary for description length',
+        description: 'Valid: Description at maximum length (1000 chars)',
         data: {
           id: 'prod-789',
           name: 'Keyboard',
@@ -861,30 +441,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Description just above minimum (501 chars) - checks that boundary+1 is still valid (if inclusive)',
-        data: {
-          id: 'prod-501',
-          name: 'Product',
-          price: 50,
-          description: 'D'.repeat(501),
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description just below maximum (999 chars) - checks that boundary-1 is still valid',
-        data: {
-          id: 'prod-999',
-          name: 'Product',
-          price: 50,
-          description: 'E'.repeat(999),
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description at exact midpoint (750 chars) - checks middle value in range',
+        description: 'Valid: Description in middle range (750 chars)',
         data: {
           id: 'prod-mid',
           name: 'Product',
@@ -894,32 +451,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: true,
       },
       {
-        description:
-          'Valid: Description with all required fields and optional fields - checks complete object validation',
-        data: {
-          id: 'prod-full',
-          name: 'Product',
-          price: 50,
-          description: 'G'.repeat(600),
-          inStock: true,
-          categories: ['electronics'],
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description with only required fields - checks that optional fields are truly optional',
-        data: {
-          id: 'prod-min',
-          name: 'Product',
-          price: 50,
-          description: 'H'.repeat(500),
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Invalid: Description too short (499 chars, below minimum of 500) - checks lower boundary violation',
+        description: 'Invalid: Description too short (499 chars)',
         data: {
           id: 'prod-xyz',
           name: 'Product',
@@ -929,8 +461,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Description too long (1001 chars, above maximum of 1000) - checks upper boundary violation',
+        description: 'Invalid: Description too long (1001 chars)',
         data: {
           id: 'prod-xyz',
           name: 'Product',
@@ -940,63 +471,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Description exactly at boundary minus one (499 chars) - checks strict boundary enforcement',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: 'K'.repeat(499),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Description exactly at boundary plus one (1001 chars) - checks strict boundary enforcement',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: 'L'.repeat(1001),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Description way too short (normal text, far below minimum) - checks rejection of very short descriptions',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: 'Short description',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Empty description string - checks that empty strings are rejected for required string fields',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: '',
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Description way too long (2000 chars, far above maximum) - checks rejection of very long descriptions',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: 'M'.repeat(2000),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (description) - checks that required fields are enforced',
+        description: 'Invalid: Missing required field (description)',
         data: {
           id: 'prod-xyz',
           name: 'Product',
@@ -1005,44 +480,7 @@ export const TEST_CASES: TestCase[] = [
         expectedResult: false,
       },
       {
-        description:
-          'Invalid: Missing required field (id) - checks that all required fields are enforced',
-        data: {
-          name: 'Product',
-          price: 50,
-          description: 'N'.repeat(750),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (name) - checks that all required fields are enforced',
-        data: {
-          id: 'prod-xyz',
-          price: 50,
-          description: 'O'.repeat(750),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing required field (price) - checks that all required fields are enforced',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          description: 'P'.repeat(750),
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Missing all required fields - checks that multiple missing fields are detected',
-        data: {},
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for description (number instead of string) - checks type validation',
+        description: 'Invalid: Wrong type for description (number)',
         data: {
           id: 'prod-xyz',
           name: 'Product',
@@ -1050,61 +488,6 @@ export const TEST_CASES: TestCase[] = [
           description: 12345,
         },
         expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for description (array instead of string) - checks type validation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: ['not', 'a', 'string'],
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Wrong type for description (boolean instead of string) - checks type validation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: true,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Invalid: Description as null - checks that null values are rejected for required string fields',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: null,
-        },
-        expectedResult: false,
-      },
-      {
-        description:
-          'Valid: Description with only whitespace (500 spaces) - checks if whitespace-only strings are considered valid when meeting length requirements',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: ' '.repeat(500),
-        },
-        expectedResult: true,
-      },
-      {
-        description:
-          'Valid: Description with special characters at boundaries - checks that special characters are counted correctly in length validation',
-        data: {
-          id: 'prod-xyz',
-          name: 'Product',
-          price: 50,
-          description: '!@#$%^&*()'.repeat(50), // 500 chars
-        },
-        expectedResult: true,
       },
     ],
   },

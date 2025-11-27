@@ -10,6 +10,11 @@ Damir Manapov
 
 MIT
 
+## To Do
+
+* investigate tool based generation
+* tests provided by llm
+
 ## Stack
 
 - TypeScript
